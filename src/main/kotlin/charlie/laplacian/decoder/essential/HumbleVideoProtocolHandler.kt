@@ -16,7 +16,7 @@ class HumbleVideoProtocolHandler: IURLProtocolHandler {
         if (flags != URL_RDONLY_MODE) return FAIL
         url.split("//").apply {
             if (size < 2) throw IllegalArgumentException("bad url format")
-            stream = FFmpegDecoder.streams[this[2]]
+            stream = FFmpegDecoder.streams[this[1]]
             return SUCCESS
         }
         return FAIL

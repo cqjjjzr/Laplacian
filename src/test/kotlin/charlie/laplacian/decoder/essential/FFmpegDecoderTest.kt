@@ -15,6 +15,6 @@ class FFmpegDecoderTest {
                 .getDecoder(FileSource().streamFrom(
                         FileTrackSourceInfo(
                                 File("C:\\Users\\cqjjj\\IdeaProjects\\Laplacian\\src\\test\\resources\\testaudio.mp3"))))
-                .positionMillis())
+                .durationMillis())
     }
 }

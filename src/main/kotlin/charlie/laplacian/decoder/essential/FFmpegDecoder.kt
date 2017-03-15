@@ -41,6 +41,8 @@ class FFmpegDecoder(private val stream: TrackStream): Decoder {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
+    override fun durationMillis(): Long = durationMillis
+
     override fun volumeTo(percent: Long) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
