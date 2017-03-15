@@ -39,6 +39,11 @@
             <artifactId>annotations</artifactId>
             <version>LATEST</version>
         </dependency>
+        <dependency>
+            <groupId>io.humble</groupId>
+            <artifactId>humble-video-all</artifactId>
+            <version>LATEST</version>
+        </dependency>
     </dependencies>
 
     <build>
