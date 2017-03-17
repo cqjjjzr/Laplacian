@@ -1,9 +1,10 @@
 package charlie.laplacian.decoder.essential
 
 import charlie.laplacian.decoder.SeekableTrackStream
+import charlie.laplacian.decoder.SizeKnownTrackStream
 import charlie.laplacian.decoder.TrackStream
 import io.humble.video.customio.IURLProtocolHandler
-import io.humble.video.customio.IURLProtocolHandler.URL_RDONLY_MODE
+import io.humble.video.customio.IURLProtocolHandler.*
 import io.humble.video.customio.IURLProtocolHandlerFactory
 
 class HumbleVideoProtocolHandler: IURLProtocolHandler {
@@ -26,13 +27,29 @@ class HumbleVideoProtocolHandler: IURLProtocolHandler {
         throw UnsupportedOperationException()
     }
 
-    override fun isStreamed(url: String, flags: Int): Boolean {
-        return false
-    }
+    override fun isStreamed(url: String, flags: Int): Boolean = false
 
     override fun seek(offset: Long, whence: Int): Long {
         if (stream is SeekableTrackStream) {
-            (stream as SeekableTrackStream).seek((whence + offset).toInt())
+            (stream as SeekableTrackStream).apply {
+                when (whence) {
+                    SEEK_SET -> seek(offset.toInt())
+                    SEEK_CUR -> seek(position() + offset.toInt())
+                    SEEK_END -> {
+                        if (stream is SizeKnownTrackStream)
+                            seek((stream as SizeKnownTrackStream).size() - offset.toInt())
+                        else return -1L
+                    }
+                    SEEK_SIZE -> {
+                        if (stream is SizeKnownTrackStream)
+                            return (stream as SizeKnownTrackStream).size().toLong()
+                        else return -1L
+                    }
+                    else -> {
+                        return 1L
+                    }
+                }
+            }
             return stream!!.position().toLong()
         }
         return -1L
@@ -44,7 +61,13 @@ class HumbleVideoProtocolHandler: IURLProtocolHandler {
     }
 
     override fun read(buf: ByteArray, size: Int): Int {
-        return stream!!.read(buf, 0, size)
+        stream!!.read(buf, 0, size).apply {
+            when (this) {
+                -1 -> return 0 // EOF
+                else -> return this
+            }
+        }
+        return -1
     }
 }
 

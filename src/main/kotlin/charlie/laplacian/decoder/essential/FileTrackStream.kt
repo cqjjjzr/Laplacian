@@ -1,12 +1,13 @@
 package charlie.laplacian.decoder.essential
 
 import charlie.laplacian.decoder.SeekableTrackStream
+import charlie.laplacian.decoder.SizeKnownTrackStream
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
-class FileTrackStream(path: Path) : SeekableTrackStream {
+class FileTrackStream(path: Path) : SeekableTrackStream, SizeKnownTrackStream {
     private val buffer: MappedByteBuffer
     private val channel: FileChannel = FileChannel.open(path, StandardOpenOption.READ)
 
@@ -26,6 +27,8 @@ class FileTrackStream(path: Path) : SeekableTrackStream {
     override fun seek(positionBytes: Int) {
         buffer.position(positionBytes)
     }
+
+    override fun size(): Int = channel.size().toInt()
 
     init {
         buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size())

@@ -8,11 +8,11 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>com.github.cqjjjzr Laplacian</name>
+    <name>Laplacian</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin.version>1.0.6</kotlin.version>
+        <kotlin.version>1.1.0</kotlin.version>
         <junit.version>4.12</junit.version>
     </properties>
 
@@ -43,7 +43,28 @@
             <groupId>io.humble</groupId>
             <artifactId>humble-video-all</artifactId>
             <version>LATEST</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.humble</groupId>
+                    <artifactId>humble-video-arch-i686-w64-mingw32</artifactId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>humble-video-noarch</artifactId>
+                    <groupId>io.humble</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
+        <dependency>
+            <groupId>io.humble</groupId>
+            <artifactId>humble-video-noarch</artifactId>
+            <version>0.3.0-LAPLACIAN</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.24</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -58,7 +79,7 @@
                 <executions>
                     <execution>
                         <id>compile</id>
-                        <phase>compile</phase>
+                        <phase>process-sources</phase>
                         <goals>
                             <goal>compile</goal>
                         </goals>

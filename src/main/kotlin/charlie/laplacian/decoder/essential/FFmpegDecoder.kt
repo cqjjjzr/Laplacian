@@ -4,12 +4,12 @@ import charlie.laplacian.I18n
 import charlie.laplacian.decoder.Decoder
 import charlie.laplacian.decoder.DecoderFactory
 import charlie.laplacian.decoder.TrackStream
-import io.humble.video.Demuxer
-import io.humble.video.MediaAudio
-import io.humble.video.MediaDescriptor
-import io.humble.video.Rational
+import io.humble.video.*
+import io.humble.video.Global.NO_PTS
 import io.humble.video.javaxsound.AudioFrame
+import io.humble.video.javaxsound.MediaAudioConverter
 import io.humble.video.javaxsound.MediaAudioConverterFactory
+import java.nio.ByteBuffer
 import java.util.*
 
 class FFmpegDecoder(private val stream: TrackStream): Decoder {
@@ -21,6 +21,8 @@ class FFmpegDecoder(private val stream: TrackStream): Decoder {
     private var demuxer: Demuxer = Demuxer.make()
     private var audioFrame: AudioFrame? = null
     private var durationMillis: Long = 0
+    private var audioStreamIndex: Int = -1
+    private var converter: MediaAudioConverter? = null
     override fun play() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
@@ -62,8 +64,10 @@ class FFmpegDecoder(private val stream: TrackStream): Decoder {
         demuxer.numStreams.apply {
             for (i in 0..this) {
                 demuxer.getStream(i).apply {
-                    if (decoder != null && decoder.codecType == MediaDescriptor.Type.MEDIA_AUDIO)
+                    if (decoder != null && decoder.codecType == MediaDescriptor.Type.MEDIA_AUDIO) {
+                        audioStreamIndex = i
                         return decoder
+                    }
                 }
             }
         }
@@ -76,17 +80,44 @@ class FFmpegDecoder(private val stream: TrackStream): Decoder {
         demuxer = Demuxer.make()
         demuxer.open("laplacian://$serial", null, false, true, null, null)
 
-        findAudioDecoder().apply {
-            open(null, null)
+        var samples: MediaAudio? = null
+        val decoder = findAudioDecoder()
 
-            audioFrame = AudioFrame.make(
-                    MediaAudioConverterFactory.createConverter(
-                            MediaAudioConverterFactory.DEFAULT_JAVA_AUDIO,
-                            MediaAudio.make(
-                                    frameSize, sampleRate, channels, channelLayout, sampleFormat
-                            ).apply { calculateDuration(this) }
-                    ).javaFormat
+        decoder.apply {
+            open(null, null)
+            samples = MediaAudio.make(
+                    frameSize, sampleRate, channels, channelLayout, sampleFormat
             )
+
+            converter = MediaAudioConverterFactory.createConverter(
+                            MediaAudioConverterFactory.DEFAULT_JAVA_AUDIO,
+                            samples)
+
+            audioFrame = AudioFrame.make(converter!!.javaFormat)
+        }
+
+        // calculateDuration(samples!!)
+        durationMillis = demuxer.duration.let {
+            if (it == NO_PTS) -1
+            else it / 1000 // Microsecond to millisecond
+        }
+        var rawAudio: ByteBuffer? = null
+
+        MediaPacket.make().apply {
+            while (demuxer.read(this) >= 0) {
+                if (this.streamIndex == audioStreamIndex) {
+                    var offset = 0
+                    var readLength = 0
+                    do {
+                        readLength += decoder.decode(samples, this, offset)
+                        if (samples!!.isComplete) {
+                            rawAudio = converter!!.toJavaAudio(rawAudio, samples)
+                            audioFrame!!.play(rawAudio)
+                        }
+                        offset += readLength
+                    } while (offset < size)
+                }
+            }
         }
     }
 

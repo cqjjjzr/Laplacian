@@ -9,12 +9,12 @@ import java.io.File
 class FFmpegDecoderTest {
     @Test
     fun test() {
-        Class.forName("io.humble.video.Demuxer")
         URLProtocolManager.getManager().registerFactory("laplacian", HumbleVideoProtocolHandlerFactory())
         println(FFmpegDecoderFactory()
                 .getDecoder(FileSource().streamFrom(
                         FileTrackSourceInfo(
-                                File("C:\\Users\\cqjjj\\IdeaProjects\\Laplacian\\src\\test\\resources\\testaudio.mp3"))))
+                                File("E:\\iTunes\\iTunes Media\\Music\\动点p\\三月雨\\01 三月雨 (feat. 乐正绫).mp3"))))
+                // USE YOUR CUSTOM TEST AUDIO HERE
                 .durationMillis())
     }
 }
