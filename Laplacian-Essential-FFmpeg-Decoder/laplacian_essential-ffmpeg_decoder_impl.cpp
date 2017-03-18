@@ -9,6 +9,9 @@ using namespace std;
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_thread.h>
 
+#include "shortcuts.h"
+#include "error_msgs.h"
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -16,31 +19,26 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
-#define CHECK_RETVAL(retval, errorMsgRoot) if (retval < 0) {throw_retval_exception(env, retval, errorMsgRoot);return;}
-
-static const char* ERROR_MESSAGE_OPEN_INPUT = "Failed to open input, avformat_open_input returned error code ";
-static const char* ERROR_MESSAGE_FIND_STREAM = "Failed to find stream info, avformat_find_stream_info returned error code ";
-static const char* ERROR_MESSAGE_NO_AUDIO_STREAM = "Can't find audio stream in the input resource!";
-static const char* ERROR_MESSAGE_UNSUPPORTED_CODEC = "Unsupported codec!";
-static const char* ERROR_MESSAGE_FAILED_OPEN_AUDIO_DEVICE = "Failed opening audio device! SDL_OpenAudio returned error code ";
-static const char* ERROR_MESSAGE_UNKNOWN = "Failed to open input, unknown error! FFmpeg function returned error code ";
-
 static const int MAX_AUDIO_FRAME_SIZE = 192000;
 static const int SDL_AUDIO_BUFFER_SIZE = 1024;
-
-void throw_retval_exception(JNIEnv *env, int retval, const char *errorMsgRoot) {
-    stringstream errorStream;
-    errorStream << errorMsgRoot << retval;
-
-    env->ThrowNew(env->FindClass("charlie/laplacian/decoder/essential/FFmpegException"),
-                      errorStream.str().c_str());
-}
 
 void audio_callback(void* userdata, Uint8 *stream, int len) {
 
 }
 
+void thread_play(AVFormatContext *pFormatCtx) {
+    for ()
+}
+
 extern "C"{
+JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_play
+        (JNIEnv * env, jobject javaThis) {
+    AVCodecContext *pCodecCtx = getAVCodecContext(env, javaThis);
+
+    setPaused(env, javaThis, false);
+    SDL_PauseAudio(0);
+
+}
 
 JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_initNativeLib
         (JNIEnv * env, jobject javaThis, jobject stream, jstring url) {
@@ -56,16 +54,10 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_in
         return;
     }
 
-    retval = avformat_find_stream_info(pFormatCtx, nullptr);
-    if (retval != 0) {
-        env->ReleaseStringUTFChars(url, urlCString);
-        throw_retval_exception(env, retval, ERROR_MESSAGE_FIND_STREAM);
-        return;
-    }
-
-    av_dump_format(pFormatCtx, 0, urlCString, 0);
-
     env->ReleaseStringUTFChars(url, urlCString);
+
+    CHECK_RETVAL(avformat_find_stream_info(pFormatCtx, nullptr), ERROR_MESSAGE_FIND_STREAM)
+
 
     int audioStreamIndex = -1;
     for (int i = 0;i < pFormatCtx->nb_streams;i++)
@@ -96,11 +88,7 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_in
 
     pCodecCtx = avcodec_alloc_context3(pCodec);
 
-    retval = avcodec_parameters_to_context(pCodecCtx, pCodecPara);
-    if (retval != 0) {
-        throw_retval_exception(env, retval, ERROR_MESSAGE_UNKNOWN);
-        return;
-    }
+    CHECK_RETVAL(avcodec_parameters_to_context(pCodecCtx, pCodecPara), ERROR_MESSAGE_UNKNOWN)
 
     SDL_AudioSpec wanted_spec, spec;
     wanted_spec.freq     = pCodecCtx->sample_rate;
@@ -111,18 +99,12 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_in
     wanted_spec.callback = audio_callback;
     wanted_spec.userdata = pCodecCtx;
 
-    retval = SDL_OpenAudio(&wanted_spec, &spec);
-    if (retval < 0) {
-        throw_retval_exception(env, retval, ERROR_MESSAGE_FAILED_OPEN_AUDIO_DEVICE);
-        return;
-    }
+    CHECK_RETVAL(SDL_OpenAudio(&wanted_spec, &spec), ERROR_MESSAGE_FAILED_OPEN_AUDIO_DEVICE);
+    CHECK_RETVAL(avcodec_open2(pCodecCtx, pCodec, nullptr), ERROR_MESSAGE_UNKNOWN);
 
-    retval = avcodec_open2(pCodecCtx, pCodec, nullptr);
-    if (retval < 0) {
-        throw_retval_exception(env, retval, ERROR_MESSAGE_FAILED_OPEN_AUDIO_DEVICE);
-        return;
-    }
-    CHECK_RETVAL(avcodec_open2(pCodecCtx, pCodec, nullptr), ERROR_MESSAGE_FAILED_OPEN_AUDIO_DEVICE);
+    SDL_PauseAudio(1);
+    setAVCodecContext(env, javaThis, pCodecCtx);
+    setAVFormatContext(env, javaThis, pFormatCtx);
 
 }
 
