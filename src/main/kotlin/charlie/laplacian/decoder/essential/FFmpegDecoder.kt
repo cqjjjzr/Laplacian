@@ -159,6 +159,7 @@ class FFmpegDecoder(private val stream: TrackStream): Decoder {
     private var pointerPacketQueue: Long = 0
     @Volatile
     private var volume: Int = 0
+    private var position: Long = 0
 
 
     @Volatile
@@ -172,13 +173,15 @@ class FFmpegDecoder(private val stream: TrackStream): Decoder {
 
     override external fun seek(positionMillis: Long)
 
-    override external fun positionMillis(): Long
+    override fun positionMillis(): Long = position
 
     override external fun durationMillis(): Long
 
-    override external fun volumeTo(percent: Long)
+    override fun volumeTo(percent: Int) {
+        volume = (percent * 1.28).toInt()
+    }
 
-    override external fun volume(): Long
+    override fun volume(): Int = (volume / 1.28).toInt()
 
     override external fun close()
 
