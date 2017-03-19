@@ -26,8 +26,13 @@ enum class PropertyType {
 }
 
 // FOR OPTIMIZE
-val PROPERTY_APPLICABLE_TRACK_ONLY: Set<PropertyApplicableType> = Collections.unmodifiableSet(EnumSet.of(PropertyApplicableType.TRACK))
-
-val PROPERTY_APPLICABLE_GROUPING_ONLY: Set<PropertyApplicableType> = Collections.unmodifiableSet(EnumSet.of(PropertyApplicableType.TRACK))
-
-val PROPERTY_APPLICABLE_TRACK_AND_GROUPING: Set<PropertyApplicableType> = Collections.unmodifiableSet(EnumSet.of(PropertyApplicableType.TRACK, PropertyApplicableType.GROUPING_METHOD))
+class PropertyApplicableTypeSets {
+    companion object {
+        @JvmStatic
+        val TRACK_ONLY: Set<PropertyApplicableType> = Collections.unmodifiableSet(EnumSet.of(PropertyApplicableType.TRACK))
+        @JvmStatic
+        val GROUPING_ONLY: Set<PropertyApplicableType> = Collections.unmodifiableSet(EnumSet.of(PropertyApplicableType.TRACK))
+        @JvmStatic
+        val TRACK_AND_GROUPING: Set<PropertyApplicableType> = Collections.unmodifiableSet(EnumSet.of(PropertyApplicableType.TRACK, PropertyApplicableType.GROUPING_METHOD))
+    }
+}

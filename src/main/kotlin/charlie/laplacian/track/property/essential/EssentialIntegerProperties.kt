@@ -1,7 +1,11 @@
 package charlie.laplacian.track.property.essential
 
 import charlie.laplacian.I18n
-import charlie.laplacian.track.property.*
+import charlie.laplacian.track.property.Property
+import charlie.laplacian.track.property.PropertyApplicableType
+import charlie.laplacian.track.property.PropertyApplicableTypeSets.Companion.TRACK_AND_GROUPING
+import charlie.laplacian.track.property.PropertyApplicableTypeSets.Companion.TRACK_ONLY
+import charlie.laplacian.track.property.PropertyType
 
 abstract class IntegerTypeProperty(private var value: Int,
                                    private val i18NKey: String,
@@ -25,8 +29,8 @@ abstract class IntegerTypeProperty(private var value: Int,
 }
 
 class TrackNumberProperty(value: Int): IntegerTypeProperty(value, "property.essential.trackNumberProperty.name",
-        PROPERTY_APPLICABLE_TRACK_ONLY, false)
+        TRACK_ONLY, false)
 class ReleaseYearProperty(value: Int): IntegerTypeProperty(value, "property.essential.releaseYearProperty.name",
-        PROPERTY_APPLICABLE_TRACK_AND_GROUPING, false)
+        TRACK_AND_GROUPING, false)
 class BPMProperty(value: Int): IntegerTypeProperty(value, "property.essential.bpmProperty.name",
-        PROPERTY_APPLICABLE_TRACK_ONLY, false)
+        TRACK_ONLY, false)

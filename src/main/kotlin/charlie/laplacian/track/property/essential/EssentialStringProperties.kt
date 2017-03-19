@@ -1,7 +1,11 @@
 package charlie.laplacian.track.property.essential
 
 import charlie.laplacian.I18n
-import charlie.laplacian.track.property.*
+import charlie.laplacian.track.property.Property
+import charlie.laplacian.track.property.PropertyApplicableType
+import charlie.laplacian.track.property.PropertyApplicableTypeSets.Companion.TRACK_AND_GROUPING
+import charlie.laplacian.track.property.PropertyApplicableTypeSets.Companion.TRACK_ONLY
+import charlie.laplacian.track.property.PropertyType
 
 abstract class StringTypeProperty(private var value: String,
                                   private val i18NKey: String,
@@ -24,14 +28,14 @@ abstract class StringTypeProperty(private var value: String,
 }
 
 class NameProperty(value: String): StringTypeProperty(value, "property.essential.nameProperty.name",
-        PROPERTY_APPLICABLE_TRACK_AND_GROUPING, false)
+        TRACK_AND_GROUPING, false)
 class ArtistProperty(value: String): StringTypeProperty(value, "property.essential.artistProperty.name",
-        PROPERTY_APPLICABLE_TRACK_AND_GROUPING, true)
+        TRACK_AND_GROUPING, true)
 class AlbumProperty(value: String): StringTypeProperty(value, "property.essential.albumProperty.name",
-        PROPERTY_APPLICABLE_TRACK_ONLY, false)
+        TRACK_ONLY, false)
 class AlbumArtistProperty(value: String): StringTypeProperty(value, "property.essential.albumArtistProperty.name",
-        PROPERTY_APPLICABLE_TRACK_ONLY, false)
+        TRACK_ONLY, false)
 class ComposerProperty(value: String): StringTypeProperty(value, "property.essential.composerProperty.name",
-        PROPERTY_APPLICABLE_TRACK_AND_GROUPING, false)
+        TRACK_AND_GROUPING, false)
 class GenreProperty(value: String): StringTypeProperty(value, "property.essential.genreProperty.name",
-        PROPERTY_APPLICABLE_TRACK_AND_GROUPING, true)
+        TRACK_AND_GROUPING, true)

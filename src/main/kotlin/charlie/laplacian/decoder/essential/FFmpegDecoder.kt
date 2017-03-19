@@ -1,28 +1,28 @@
 package charlie.laplacian.decoder.essential
 
-import charlie.laplacian.I18n
 import charlie.laplacian.decoder.Decoder
 import charlie.laplacian.decoder.DecoderFactory
 import charlie.laplacian.decoder.TrackStream
-import io.humble.video.*
-import io.humble.video.Global.NO_PTS
-import io.humble.video.javaxsound.AudioFrame
-import io.humble.video.javaxsound.MediaAudioConverter
-import io.humble.video.javaxsound.MediaAudioConverterFactory
-import java.nio.ByteBuffer
-import java.util.*
 
-class FFmpegDecoder(private val stream: TrackStream): Decoder {
+/*class FFmpegDecoder(private val stream: TrackStream): Decoder, Runnable {
     companion object{
         val streams: MutableMap<String, TrackStream> = HashMap()
     }
 
     private var serial: String = System.nanoTime().toString()
     private var demuxer: Demuxer = Demuxer.make()
+
+    private var audioStreamIndex: Int = -1
+    private var audioStream: DemuxerStream? = null
+    private var decoder: io.humble.video.Decoder? = null
+
+    private var rawAudio: ByteBuffer? = null
+    private var samples: MediaAudio? = null
     private var audioFrame: AudioFrame? = null
     private var durationMillis: Long = 0
-    private var audioStreamIndex: Int = -1
+
     private var converter: MediaAudioConverter? = null
+
     override fun play() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
@@ -36,7 +36,17 @@ class FFmpegDecoder(private val stream: TrackStream): Decoder {
     }
 
     override fun seek(positionMillis: Long) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        audioStream!!
+                .timeBase
+                    .multiply(Rational.make(1000.0)) // Second to Millisecond
+                    .multiply(Rational.make(positionMillis.toDouble()))
+                .apply {
+                    demuxer.seek(audioStreamIndex,
+                            0L,
+                            this.value.toLong(),
+                            this.value.toLong(),
+                            Demuxer.SeekFlag.SEEK_BACKWARD.swigValue())
+                }
     }
 
     override fun positionMillis(): Long {
@@ -66,6 +76,7 @@ class FFmpegDecoder(private val stream: TrackStream): Decoder {
                 demuxer.getStream(i).apply {
                     if (decoder != null && decoder.codecType == MediaDescriptor.Type.MEDIA_AUDIO) {
                         audioStreamIndex = i
+                        audioStream = this
                         return decoder
                     }
                 }
@@ -80,10 +91,9 @@ class FFmpegDecoder(private val stream: TrackStream): Decoder {
         demuxer = Demuxer.make()
         demuxer.open("laplacian://$serial", null, false, true, null, null)
 
-        var samples: MediaAudio? = null
-        val decoder = findAudioDecoder()
+        decoder = findAudioDecoder()
 
-        decoder.apply {
+        decoder!!.apply {
             open(null, null)
             samples = MediaAudio.make(
                     frameSize, sampleRate, channels, channelLayout, sampleFormat
@@ -101,15 +111,22 @@ class FFmpegDecoder(private val stream: TrackStream): Decoder {
             if (it == NO_PTS) -1
             else it / 1000 // Microsecond to millisecond
         }
-        var rawAudio: ByteBuffer? = null
+    }
 
+    override fun close() {
+        streams.remove(serial)
+        demuxer.close()
+        stream.close()
+    }
+
+    override fun run() {
         MediaPacket.make().apply {
             while (demuxer.read(this) >= 0) {
                 if (this.streamIndex == audioStreamIndex) {
                     var offset = 0
                     var readLength = 0
                     do {
-                        readLength += decoder.decode(samples, this, offset)
+                        readLength += decoder!!.decode(samples, this, offset)
                         if (samples!!.isComplete) {
                             rawAudio = converter!!.toJavaAudio(rawAudio, samples)
                             audioFrame!!.play(rawAudio)
@@ -120,11 +137,58 @@ class FFmpegDecoder(private val stream: TrackStream): Decoder {
             }
         }
     }
+}*/
 
-    override fun close() {
-        streams.remove(serial)
-        demuxer.close()
-        stream.close()
+class FFmpegDecoder(private val stream: TrackStream): Decoder {
+    companion object {
+        @JvmStatic
+        val streams: MutableMap<String, TrackStream> = HashMap()
+        @JvmStatic
+        private external fun globalInit()
+    }
+
+    private val URL_PREFIX = "laplacian://"
+    private val serial: String = System.nanoTime().toString()
+    @Volatile
+    private var paused: Boolean = true
+    @Volatile
+    private var pointerAVCodecContext: Long = 0
+    @Volatile
+    private var pointerAVFormatContext: Long = 0
+    @Volatile
+    private var pointerPacketQueue: Long = 0
+    @Volatile
+    private var volume: Int = 0
+
+
+    @Volatile
+    private var audioStreamIndex: Int = -1
+
+    override external fun play()
+
+    override external fun stop()
+
+    override external fun pause()
+
+    override external fun seek(positionMillis: Long)
+
+    override external fun positionMillis(): Long
+
+    override external fun durationMillis(): Long
+
+    override external fun volumeTo(percent: Long)
+
+    override external fun volume(): Long
+
+    override external fun close()
+
+    private external fun playThread()
+
+    private external fun initNativeLib(stream: TrackStream, url: String)
+
+    init {
+        streams[serial] = stream
+        initNativeLib(stream, URL_PREFIX + serial)
     }
 }
 

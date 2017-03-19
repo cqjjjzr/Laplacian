@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Laplacian.iml" filepath="$PROJECT_DIR$/Laplacian.iml" />
-      <module fileurl="file://D:/HumbleVideo/humble-video/humble-video-noarch/humble-video-noarch.iml" filepath="D:/HumbleVideo/humble-video/humble-video-noarch/humble-video-noarch.iml" />
     </modules>
   </component>
 </project>

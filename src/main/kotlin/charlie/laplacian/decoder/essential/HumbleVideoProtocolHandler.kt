@@ -1,13 +1,6 @@
 package charlie.laplacian.decoder.essential
 
-import charlie.laplacian.decoder.SeekableTrackStream
-import charlie.laplacian.decoder.SizeKnownTrackStream
-import charlie.laplacian.decoder.TrackStream
-import io.humble.video.customio.IURLProtocolHandler
-import io.humble.video.customio.IURLProtocolHandler.*
-import io.humble.video.customio.IURLProtocolHandlerFactory
-
-class HumbleVideoProtocolHandler: IURLProtocolHandler {
+/*class HumbleVideoProtocolHandler: IURLProtocolHandler {
     private val SUCCESS: Int = 0
     private val FAIL: Int = -1
 
@@ -23,9 +16,7 @@ class HumbleVideoProtocolHandler: IURLProtocolHandler {
         return FAIL
     }
 
-    override fun write(buf: ByteArray, size: Int): Int {
-        throw UnsupportedOperationException()
-    }
+    override fun write(buf: ByteArray, size: Int): Int = FAIL
 
     override fun isStreamed(url: String, flags: Int): Boolean = false
 
@@ -79,4 +70,4 @@ class HumbleVideoProtocolHandlerFactory: IURLProtocolHandlerFactory {
             return HumbleVideoProtocolHandler()
         throw IllegalArgumentException()
     }
-}
+}*/
