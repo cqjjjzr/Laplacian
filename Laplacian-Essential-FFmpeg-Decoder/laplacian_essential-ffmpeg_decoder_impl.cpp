@@ -144,20 +144,18 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pl
 }
 
 JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_initNativeLib
-        (JNIEnv * env, jobject javaThis, jobject stream, jstring url) {
-    const char *urlCString = env->GetStringUTFChars(url, JNI_FALSE);
+        (JNIEnv * env, jobject javaThis, jobject stream) {
     int retval = 0;
 
-    AVFormatContext *pFormatCtx = nullptr;
+    AVFormatContext *pFormatCtx = avformat_alloc_context();
 
-    retval = avformat_open_input(&pFormatCtx, urlCString, nullptr, nullptr);
+    retval = avformat_open_input(&pFormatCtx, "", nullptr, nullptr);
     if (retval != 0) {
-        env->ReleaseStringUTFChars(url, urlCString);
         throw_retval_exception(env, retval, ERROR_MESSAGE_OPEN_INPUT);
         return;
     }
 
-    env->ReleaseStringUTFChars(url, urlCString);
+    //env->ReleaseStringUTFChars(url, urlCString);
 
     CHECK_RETVAL(avformat_find_stream_info(pFormatCtx, nullptr), ERROR_MESSAGE_FIND_STREAM)
 
