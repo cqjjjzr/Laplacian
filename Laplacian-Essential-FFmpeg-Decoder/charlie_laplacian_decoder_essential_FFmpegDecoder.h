@@ -41,34 +41,10 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_se
 
 /*
  * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
- * Method:    positionMillis
- * Signature: ()J
- */
-JNIEXPORT jlong JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_positionMillis
-  (JNIEnv *, jobject);
-
-/*
- * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
  * Method:    durationMillis
  * Signature: ()J
  */
 JNIEXPORT jlong JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_durationMillis
-  (JNIEnv *, jobject);
-
-/*
- * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
- * Method:    volumeTo
- * Signature: (J)V
- */
-JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_volumeTo
-  (JNIEnv *, jobject, jlong);
-
-/*
- * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
- * Method:    volume
- * Signature: ()J
- */
-JNIEXPORT jlong JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_volume
   (JNIEnv *, jobject);
 
 /*

@@ -70,6 +70,11 @@ void setVolume(JNIEnv * env, jobject javaThis, int volume) {
             , (jint) volume);
 }
 
+void setPosition(JNIEnv * env, jobject javaThis, long position) {
+    env->SetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "position", "J")
+            , (jlong) position);
+}
+
 void throw_retval_exception(JNIEnv *env, int retval, const char *errorMsgRoot) {
     stringstream errorStream;
     errorStream << errorMsgRoot << retval;

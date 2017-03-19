@@ -23,15 +23,19 @@ extern "C" {
 static const int MAX_AUDIO_FRAME_SIZE = 192000;
 static const int SDL_AUDIO_BUFFER_SIZE = 1024;
 static JavaVM *javaVM = nullptr;
+static jint javaVMVersion;
 
-typedef struct CallBackHolder {
-    AVCodecContext *pCodecCtx;
-    PacketQueue *queue;
-} CallBackHolder;
-
-void audio_callback(void* userdata, Uint8 *stream, int len) {
-    AVCodecContext *pCodecCtx = ((CallBackHolder *)userdata)->pCodecCtx;
-    PacketQueue *packetQueue = ((CallBackHolder *)userdata)->queue;
+void audioCallback(void *pJavaThis, Uint8 *stream, int len) {
+    jobject javaThis = *(jobject *)pJavaThis;
+    JNIEnv *env = nullptr;
+    bool needToDetach = false;
+    if (javaVM->GetEnv((void **) &env, javaVMVersion) < 0) {
+        needToDetach = true;
+        if (!javaVM->AttachCurrentThread((void **) &env, nullptr))
+            javaVM->DestroyJavaVM();
+    }
+    AVCodecContext *pCodecCtx = getAVCodecContext(env, javaThis);
+    PacketQueue *packetQueue = getPacketQueue(env, javaThis);
 
     int len1, audioSize;
     static uint8_t audioBuff[(MAX_AUDIO_FRAME_SIZE * 3) / 2];
@@ -42,7 +46,12 @@ void audio_callback(void* userdata, Uint8 *stream, int len) {
 
     while (len > 0) {
         if (audioBufIndex >= audioBufSize) {
-            audioSize = audio_decode_frame(pCodecCtx, audioBuff, sizeof(audioBuff), *packetQueue);
+            AVPacket packet;
+            setPosition(env, javaThis, (long) av_q2d(av_mul_q(AVRational{(int) (packet.pts / 1000), 1 }, pCodecCtx->time_base)));
+            if (!packetQueue->deQueue(&packet, true))
+                audioSize = -1;
+            else
+                audioSize = audio_decode_frame(pCodecCtx, audioBuff, sizeof(audioBuff), packet);
             if (audioSize < 0) {
                 audioBufSize = 0;
                 memset(audioBuff, 0, audioBufSize);
@@ -54,12 +63,15 @@ void audio_callback(void* userdata, Uint8 *stream, int len) {
         if (len1 > len)
             len1 = len;
 
-        SDL_MixAudio(stream, audioBuff + audioBufIndex, (Uint32) len, getVolume(env, javaThis)); // ??????????
+        SDL_MixAudio(stream, audioBuff + audioBufIndex, (Uint32) len, getVolume(env, javaThis));
 
         len -= len1;
         stream += len1;
         audioBufIndex += len1;
     }
+
+    if (needToDetach)
+        javaVM->DetachCurrentThread();
 }
 
 extern "C"{
@@ -69,8 +81,46 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pl
     SDL_PauseAudio(0);
 
     CHECK_RETVAL(env->MonitorEnter(javaThis), ERROR_MESSAGE_MONITOR);
-    env->CallVoidMethod(javaThis, env->GetMethodID(env->FindClass("java/lang/Object"), "notifyAll", "V()"));
+    env->CallVoidMethod(javaThis, env->GetMethodID(env->FindClass("java/lang/Object"), "notifyAll", "()V"));
     CHECK_RETVAL(env->MonitorExit(javaThis), ERROR_MESSAGE_MONITOR);
+}
+
+JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pause
+        (JNIEnv * env, jobject javaThis) {
+    setPaused(env, javaThis, true);
+    SDL_PauseAudio(1);
+}
+
+JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_seek
+        (JNIEnv * env, jobject javaThis, jlong positionMillis) {
+    AVRational position = {
+            1, (int) (positionMillis / 1000)
+    };
+    AVCodecContext *pCodecCtx = getAVCodecContext(env, javaThis);
+    int64_t timestamp = (int64_t) av_q2d(av_mul_q(pCodecCtx->time_base, position));
+    av_seek_frame(getAVFormatContext(env, javaThis),
+                  getAudioStreamIndex(env, javaThis), timestamp , AVSEEK_FLAG_BACKWARD);
+    setPosition(env, javaThis, (long) positionMillis);
+}
+
+JNIEXPORT jlong JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_durationMillis
+        (JNIEnv * env, jobject javaThis) {
+    return getAVFormatContext(env, javaThis)->duration / 1000;
+}
+
+JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_close
+        (JNIEnv * env, jobject javaThis) {
+    setPaused(env, javaThis, true);
+    SDL_PauseAudio(1);
+
+    SDL_CloseAudio();
+
+    AVFormatContext *pFormatCtx = getAVFormatContext(env, javaThis);
+    avformat_close_input(&pFormatCtx);
+    setAVFormatContext(env, javaThis, nullptr);
+    setAVCodecContext(env, javaThis, nullptr);
+    delete getPacketQueue(env, javaThis);
+    setPacketQueue(env, javaThis, nullptr);
 }
 
 JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_playThread
@@ -87,7 +137,7 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pl
             av_packet_unref(&packet);
         while (paused(env, javaThis)) {
             CHECK_RETVAL(env->MonitorEnter(javaThis), ERROR_MESSAGE_MONITOR);
-            env->CallVoidMethod(javaThis, env->GetMethodID(env->FindClass("java/lang/Object"), "wait", "V()"));
+            env->CallVoidMethod(javaThis, env->GetMethodID(env->FindClass("java/lang/Object"), "wait", "()V"));
             CHECK_RETVAL(env->MonitorExit(javaThis), ERROR_MESSAGE_MONITOR);
         }
     }
@@ -142,18 +192,14 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_in
 
     CHECK_RETVAL(avcodec_parameters_to_context(pCodecCtx, pCodecPara), ERROR_MESSAGE_UNKNOWN)
 
-    CallBackHolder *holder = new CallBackHolder;
-    holder->queue = new PacketQueue;
-    holder->pCodecCtx = pCodecCtx;
-
     SDL_AudioSpec wanted_spec, spec;
     wanted_spec.freq     = pCodecCtx->sample_rate;
     wanted_spec.format   = AUDIO_S16SYS;
     wanted_spec.channels = (uint8_t) pCodecCtx->channels;
     wanted_spec.silence  = 0;
     wanted_spec.samples  = SDL_AUDIO_BUFFER_SIZE;
-    wanted_spec.callback = audio_callback;
-    wanted_spec.userdata = &holder;
+    wanted_spec.callback = audioCallback;
+    wanted_spec.userdata = env->NewGlobalRef(javaThis);
 
     CHECK_RETVAL(SDL_OpenAudio(&wanted_spec, &spec), ERROR_MESSAGE_FAILED_OPEN_AUDIO_DEVICE);
     CHECK_RETVAL(avcodec_open2(pCodecCtx, pCodec, nullptr), ERROR_MESSAGE_UNKNOWN);
@@ -162,7 +208,7 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_in
     setAVCodecContext(env, javaThis, pCodecCtx);
     setAVFormatContext(env, javaThis, pFormatCtx);
     setAudioStreamIndex(env, javaThis, audioStreamIndex);
-    setPacketQueue(env, javaThis, holder->queue);
+    setPacketQueue(env, javaThis, new PacketQueue);
 }
 
 JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_globalInit
@@ -170,5 +216,6 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_gl
     av_register_all();
     SDL_Init(SDL_INIT_AUDIO | SDL_INIT_TIMER);
     env->GetJavaVM(&javaVM);
+    javaVMVersion = env->GetVersion();
 }
 }

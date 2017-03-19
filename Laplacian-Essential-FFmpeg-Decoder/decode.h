@@ -8,16 +8,12 @@
 
 // FROM https://github.com/brookicv/FFMPEG-study/blob/master/FFmpeg-playAudio.cpp
 // BY brookicv
-int audio_decode_frame(AVCodecContext *aCodecCtx, uint8_t *audio_buf, int buf_size, PacketQueue queue)
+int audio_decode_frame(AVCodecContext *aCodecCtx, uint8_t *audio_buf, int buf_size, AVPacket pkt)
 {
 	AVFrame *frame = av_frame_alloc();
 	int data_size = 0;
-	AVPacket pkt;
 
 	SwrContext *swr_ctx = nullptr;
-
-	if (!queue.deQueue(&pkt, true))
-		return -1;
 
 	int ret = avcodec_send_packet(aCodecCtx, &pkt);
 	if (ret < 0 && ret != AVERROR(EAGAIN) && ret != AVERROR_EOF)
