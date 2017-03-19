@@ -13,7 +13,7 @@ set(
         laplacian_essential-ffmpeg_decoder_impl.cpp
         PacketQueue.cpp
         PacketQueue.h
-        shortcuts.h error_msgs.h)
+        shortcuts.h error_msgs.h decode.h)
 
 set(FFMPEG_INCLUDE "$ENV{FFMPEG_DEV_HOME}/include/")
 set(FFMPEG_LIBRARY "$ENV{FFMPEG_DEV_HOME}/lib/")
@@ -42,5 +42,20 @@ target_link_libraries(
         libpostproc.dll.a
         libswresample.dll.a
         libswscale.dll.a
-        libSDL2.a
+        -lmingw32
+        -lSDL2main
+        -lSDL2
+        -lm
+        -ldinput8
+        -ldxguid
+        -ldxerr8
+        -luser32
+        -lgdi32
+        -lwinmm
+        -limm32
+        -lole32
+        -loleaut32
+        -lshell32
+        -lversion
+        -luuid
 )

@@ -1,9 +1,8 @@
 #include "PacketQueue.h"
 
-PacketQueue::PacketQueue(bool *quit) {
+PacketQueue::PacketQueue() {
     nb_packets = 0;
     size = 0;
-    this->quit = quit;
 
     mutex = SDL_CreateMutex();
     cond = SDL_CreateCond();
@@ -30,11 +29,6 @@ bool PacketQueue::deQueue(AVPacket *packet, bool block) {
 
     SDL_LockMutex(mutex);
     while (true) {
-        if (*quit) {
-            ret = false;
-            break;
-        }
-
         if (!theQueue.empty()) {
             if (av_packet_ref(packet, &theQueue.front()) < 0) {
                 ret = false;

@@ -8,4 +8,6 @@ static const char* ERROR_MESSAGE_UNSUPPORTED_CODEC = "Unsupported codec!";
 static const char* ERROR_MESSAGE_FAILED_OPEN_AUDIO_DEVICE = "Failed opening audio device! SDL_OpenAudio returned error code ";
 static const char* ERROR_MESSAGE_UNKNOWN = "Failed to open input, unknown error! FFmpeg function returned error code ";
 
+static const char* ERROR_MESSAGE_MONITOR = "Failed executing JVM operation! FATAL ERROR! JNIEnv returned error code ";
+
 #endif //LAPLACIAN_ESSENTIAL_FFMPEG_DECODER_ERROR_MSGS_H

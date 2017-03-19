@@ -1,6 +1,7 @@
 #ifndef LAPLACIAN_ESSENTIAL_FFMPEG_DECODER_JNI_OPER_H
 #define LAPLACIAN_ESSENTIAL_FFMPEG_DECODER_JNI_OPER_H
 #include <jni.h>
+#include "PacketQueue.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -24,9 +25,29 @@ AVFormatContext* getAVFormatContext(JNIEnv * env, jobject javaThis) {
             env->GetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerAVFormatContext", "L"));
 }
 
-void setAVFormatContext(JNIEnv * env, jobject javaThis, AVFormatContext *AVFormatContext) {
+void setAVFormatContext(JNIEnv * env, jobject javaThis, AVFormatContext *avFormatContext) {
     env->SetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerAVFormatContext", "L")
-            , (jlong) AVFormatContext);
+            , (jlong) avFormatContext);
+}
+
+PacketQueue* getPacketQueue(JNIEnv * env, jobject javaThis) {
+    return (PacketQueue*)
+            env->GetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerPacketQueue", "L"));
+}
+
+void setPacketQueue(JNIEnv * env, jobject javaThis, PacketQueue *packetQueue) {
+    env->SetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerPacketQueue", "L")
+            , (jlong) packetQueue);
+}
+
+int getAudioStreamIndex(JNIEnv * env, jobject javaThis) {
+    return (int)
+            env->GetIntField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "audioStreamIndex", "I"));
+}
+
+void setAudioStreamIndex(JNIEnv * env, jobject javaThis, int audioStreamIndex) {
+    env->SetIntField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "audioStreamIndex", "I")
+            , (jint) audioStreamIndex);
 }
 
 bool paused(JNIEnv * env, jobject javaThis) {
@@ -34,9 +55,19 @@ bool paused(JNIEnv * env, jobject javaThis) {
             env->GetBooleanField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "paused", "Z"));
 }
 
-bool setPaused(JNIEnv * env, jobject javaThis, bool paused) {
+void setPaused(JNIEnv * env, jobject javaThis, bool paused) {
     env->SetBooleanField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "paused", "Z")
             , (jboolean) paused);
+}
+
+int getVolume(JNIEnv * env, jobject javaThis) {
+    return (int)
+            env->GetIntField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "volume", "I"));
+}
+
+void setVolume(JNIEnv * env, jobject javaThis, int volume) {
+    env->SetIntField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "volume", "I")
+            , (jint) volume);
 }
 
 void throw_retval_exception(JNIEnv *env, int retval, const char *errorMsgRoot) {

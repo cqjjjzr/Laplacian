@@ -81,6 +81,14 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_cl
 
 /*
  * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
+ * Method:    playThread
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_playThread
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
  * Method:    initNativeLib
  * Signature: (Lcharlie/laplacian/decoder/TrackStream;Ljava/lang/String;)V
  */

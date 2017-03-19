@@ -13,14 +13,13 @@ public:
     bool enQueue(const AVPacket *packet);
     bool deQueue(AVPacket *packet, bool block);
 
-    PacketQueue(bool *quit);
+    PacketQueue();
 
 private:
     queue<AVPacket> theQueue;
 
     int nb_packets;
     int size;
-    bool *quit;
 
     SDL_mutex *mutex;
     SDL_cond *cond;
