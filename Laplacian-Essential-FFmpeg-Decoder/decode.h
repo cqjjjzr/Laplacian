@@ -1,8 +1,10 @@
 #ifndef LAPLACIAN_ESSENTIAL_FFMPEG_DECODER_DECODE_H
 #define LAPLACIAN_ESSENTIAL_FFMPEG_DECODER_DECODE_H
 
+extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libswresample/swresample.h>
+};
 #include <SDL2/SDL_stdinc.h>
 #include "PacketQueue.h"
 

@@ -35,30 +35,26 @@ add_library(FFmpegDecoder SHARED ${SOURCE_FILES})
 
 target_link_libraries(
         FFmpegDecoder
-        libavcodec.dll.a
-        libavformat.dll.a
-        libavdevice.dll.a
-        libavfilter.dll.a
-        libavutil.dll.a
-        libpostproc.dll.a
-        libswresample.dll.a
-        libswscale.dll.a
-        m
-        z
-        -lmingw32
-        -lSDL2main
-        -lSDL2
-        -lm
-        -ldinput8
-        -ldxguid
-        -ldxerr8
-        -luser32
-        -lgdi32
-        -lwinmm
-        -limm32
-        -lole32
-        -loleaut32
-        -lshell32
-        -lversion
-        -luuid
+        avcodec
+        avformat
+        avdevice
+        avfilter
+        avutil
+        postproc
+        swresample
+        libswscale
+        #mingw32
+        SDL2main
+        libSDL2.dll.a
+        dinput8
+        dxguid
+        user32
+        gdi32
+        winmm
+        imm32
+        ole32
+        oleaut32
+        shell32
+        version
+        uuid
 )
