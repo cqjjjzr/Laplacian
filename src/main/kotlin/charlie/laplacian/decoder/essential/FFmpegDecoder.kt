@@ -3,15 +3,16 @@ package charlie.laplacian.decoder.essential
 import charlie.laplacian.decoder.Decoder
 import charlie.laplacian.decoder.DecoderFactory
 import charlie.laplacian.decoder.TrackStream
+import charlie.laplacian.decoder.VolumeController
+import kotlin.concurrent.thread
 
-class FFmpegDecoder(stream: TrackStream): Decoder {
+class FFmpegDecoder(defaultVolume: Int): Decoder {
     companion object {
         @JvmStatic
         private external fun globalInit()
     }
 
-    private val URL_PREFIX = "laplacian://"
-    private val serial: String = System.nanoTime().toString()
+    private val volumeController = SDLVolumeController(defaultVolume)
     @Volatile
     private var paused: Boolean = true
     @Volatile
@@ -24,15 +25,21 @@ class FFmpegDecoder(stream: TrackStream): Decoder {
     private var volume: Int = 0
     private var position: Long = 0
 
-
     @Volatile
     private var audioStreamIndex: Int = -1
 
-    override external fun play()
+    override fun play() {
+        paused = false
+        playInternal()
+        synchronized (this) {
+            (this as Object).notifyAll()
+        }
+    }
 
-    override external fun stop()
-
-    override external fun pause()
+    override fun pause() {
+        paused = true
+        pauseInternal()
+    }
 
     override external fun seek(positionMillis: Long)
 
@@ -40,26 +47,67 @@ class FFmpegDecoder(stream: TrackStream): Decoder {
 
     override external fun durationMillis(): Long
 
-    override fun volumeTo(percent: Int) {
-        volume = (percent * 1.28).toInt()
-    }
-
-    override fun volume(): Int = (volume / 1.28).toInt()
-
     override external fun close()
+
+    override fun getVolumeController(): VolumeController = volumeController
+
+    private fun getVolumeInternal(): Int = volumeController.currentInInt()
+
+    private external fun playInternal()
+
+    private external fun pauseInternal()
 
     private external fun playThread()
 
-    private external fun initNativeLib(stream: TrackStream)
+    private external fun startupNativeLibs()
 
-    init {
-        initNativeLib(stream) // CustomIO free for url input
-        //TODO 用file, url这样的简单IO不用CustomIO
+    private external fun initWithStream(stream: TrackStream)
+
+    private external fun initWithURL(url: String)
+
+    constructor(defaultVolume: Int, stream: TrackStream) : this(defaultVolume) {
+        initWithStream(stream)
+        init()
+    }
+
+    constructor(defaultVolume: Int, url: String) : this(defaultVolume) {
+        initWithURL(url)
+        init()
+    }
+
+    private fun init() {
+        startupNativeLibs()
+        startupThread()
+    }
+
+    private fun startupThread() {
+        thread { playThread() }.apply {
+            name = "FFmpegDecoder-PlayThread-" + hashCode()
+            isDaemon = true
+            start()
+        }
+    }
+
+    private inner class SDLVolumeController(private var volume: Int): VolumeController {
+        override fun max(): Float = 128.0f
+
+        override fun min(): Float = 0.0f
+
+        override fun current(): Float = volume.toFloat()
+
+        fun currentInInt(): Int = volume
+
+        override fun set(value: Float) {
+            volume = value.toInt()
+        }
+
     }
 }
 
 class FFmpegDecoderFactory: DecoderFactory {
-    override fun getDecoder(stream: TrackStream): Decoder {
-        return FFmpegDecoder(stream)
+    override fun getDecoder(previousVolume: Float, stream: TrackStream): Decoder {
+        if (stream is FileTrackStream) return FFmpegDecoder(previousVolume.toInt(), stream.getPath().toString())
+        // TODO Add more simple URLStream here
+        return FFmpegDecoder(previousVolume.toInt(), stream)
     }
 }

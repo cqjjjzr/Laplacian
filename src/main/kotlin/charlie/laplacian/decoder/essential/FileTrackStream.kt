@@ -7,7 +7,7 @@ import java.nio.channels.FileChannel
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
-class FileTrackStream(path: Path) : SeekableTrackStream, SizeKnownTrackStream {
+class FileTrackStream(private val path: Path) : SeekableTrackStream, SizeKnownTrackStream {
     private val buffer: MappedByteBuffer
     private val channel: FileChannel = FileChannel.open(path, StandardOpenOption.READ)
 
@@ -29,6 +29,12 @@ class FileTrackStream(path: Path) : SeekableTrackStream, SizeKnownTrackStream {
     }
 
     override fun size(): Int = channel.size().toInt()
+
+    override fun forceSeek(positionBytes: Int) {
+        seek(positionBytes)
+    }
+
+    fun getPath(): Path = path
 
     init {
         buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size())

@@ -1,5 +1,5 @@
 package charlie.laplacian.decoder
 
 interface DecoderFactory {
-    fun getDecoder(stream: TrackStream): Decoder
+    fun getDecoder(previousVolume: Float, stream: TrackStream): Decoder
 }
