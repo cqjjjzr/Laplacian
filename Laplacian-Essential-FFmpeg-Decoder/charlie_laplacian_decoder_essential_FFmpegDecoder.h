@@ -9,30 +9,6 @@ extern "C" {
 #endif
 /*
  * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
- * Method:    play
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_play
-  (JNIEnv *, jobject);
-
-/*
- * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
- * Method:    stop
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_stop
-  (JNIEnv *, jobject);
-
-/*
- * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
- * Method:    pause
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pause
-  (JNIEnv *, jobject);
-
-/*
- * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
  * Method:    seek
  * Signature: (J)V
  */
@@ -57,6 +33,22 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_cl
 
 /*
  * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
+ * Method:    playInternal
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_playInternal
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
+ * Method:    pauseInternal
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pauseInternal
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
  * Method:    playThread
  * Signature: ()V
  */
@@ -65,11 +57,27 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pl
 
 /*
  * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
- * Method:    initNativeLib
+ * Method:    startupNativeLibs
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_startupNativeLibs
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
+ * Method:    initWithStream
  * Signature: (Lcharlie/laplacian/decoder/TrackStream;)V
  */
-JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_initNativeLib
+JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_initWithStream
   (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
+ * Method:    initWithURL
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_initWithURL
+  (JNIEnv *, jobject, jstring);
 
 /*
  * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder

@@ -12,6 +12,7 @@ using namespace std;
 #include "shortcuts.h"
 #include "error_msgs.h"
 #include "decode.h"
+#include "customio.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -22,8 +23,6 @@ extern "C" {
 
 static const int MAX_AUDIO_FRAME_SIZE = 192000;
 static const int SDL_AUDIO_BUFFER_SIZE = 1024;
-static JavaVM *javaVM = nullptr;
-static jint javaVMVersion;
 
 void audioCallback(void *pJavaThis, Uint8 *stream, int len) {
     jobject javaThis = *(jobject *)pJavaThis;
@@ -75,19 +74,13 @@ void audioCallback(void *pJavaThis, Uint8 *stream, int len) {
 }
 
 extern "C"{
-JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_play
+JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_playInternal
         (JNIEnv * env, jobject javaThis) {
-    setPaused(env, javaThis, false);
     SDL_PauseAudio(0);
-
-    CHECK_RETVAL(env->MonitorEnter(javaThis), ERROR_MESSAGE_MONITOR);
-    env->CallVoidMethod(javaThis, env->GetMethodID(env->FindClass("java/lang/Object"), "notifyAll", "()V"));
-    CHECK_RETVAL(env->MonitorExit(javaThis), ERROR_MESSAGE_MONITOR);
 }
 
-JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pause
+JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pauseInternal
         (JNIEnv * env, jobject javaThis) {
-    setPaused(env, javaThis, true);
     SDL_PauseAudio(1);
 }
 
@@ -116,6 +109,8 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_cl
     SDL_CloseAudio();
 
     AVFormatContext *pFormatCtx = getAVFormatContext(env, javaThis);
+    delete pFormatCtx->pb->buffer;
+    av_free(pFormatCtx->pb);
     avformat_close_input(&pFormatCtx);
     setAVFormatContext(env, javaThis, nullptr);
     setAVCodecContext(env, javaThis, nullptr);
@@ -143,19 +138,42 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pl
     }
 }
 
-JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_initNativeLib
+JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_initWithStream
         (JNIEnv * env, jobject javaThis, jobject stream) {
-    int retval = 0;
-
     AVFormatContext *pFormatCtx = avformat_alloc_context();
+    AVIOContext *pIOCtx = getIOContext(env, javaThis, stream);
+    if (!pIOCtx) env->ThrowNew(env->FindClass("charlie/laplacian/decoder/essential/FFmpegException"),
+                               ERROR_MESSAGE_ALLOC_AVIOCONTEXT);
 
-    retval = avformat_open_input(&pFormatCtx, "", nullptr, nullptr);
-    if (retval != 0) {
+    pFormatCtx->flags = AVFMT_FLAG_CUSTOM_IO;
+
+    int retval = avformat_open_input(&pFormatCtx, "", nullptr, nullptr);
+    if (retval < 0) {
         throw_retval_exception(env, retval, ERROR_MESSAGE_OPEN_INPUT);
         return;
     }
+    pFormatCtx->pb = pIOCtx;
 
-    //env->ReleaseStringUTFChars(url, urlCString);
+    setAVFormatContext(env, javaThis, pFormatCtx);
+}
+
+JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_initWithURL
+        (JNIEnv * env, jobject javaThis, jstring url) {
+    const char* urlCString;
+    urlCString = env->GetStringUTFChars(url, JNI_FALSE);
+    AVFormatContext *pFormatCtx;
+    int retval = avformat_open_input(&pFormatCtx, urlCString, nullptr, nullptr);
+    env->ReleaseStringUTFChars(url, urlCString);
+    if (retval != 0) {
+        throw_retval_exception(env, retval, ERROR_MESSAGE_OPEN_INPUT);
+    } else {
+        setAVFormatContext(env, javaThis, pFormatCtx);
+    }
+}
+
+JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_startupNativeLibs
+        (JNIEnv * env, jobject javaThis) {
+    AVFormatContext *pFormatCtx = getAVFormatContext(env, javaThis);
 
     CHECK_RETVAL(avformat_find_stream_info(pFormatCtx, nullptr), ERROR_MESSAGE_FIND_STREAM)
 

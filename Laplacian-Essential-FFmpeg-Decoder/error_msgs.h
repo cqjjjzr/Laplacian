@@ -7,6 +7,8 @@ static const char* ERROR_MESSAGE_NO_AUDIO_STREAM = "Can't find audio stream in t
 static const char* ERROR_MESSAGE_UNSUPPORTED_CODEC = "Unsupported codec!";
 static const char* ERROR_MESSAGE_FAILED_OPEN_AUDIO_DEVICE = "Failed opening audio device! SDL_OpenAudio returned error code ";
 static const char* ERROR_MESSAGE_UNKNOWN = "Failed to open input, unknown error! FFmpeg function returned error code ";
+static const char* ERROR_MESSAGE_ALLOC_AVIOCONTEXT = "Failed to alloc AVIOContext!";
+static const char* ERROR_MESSAGE_PROBE = "Failed to probe stream format! av_probe_input_buffer returned error code ";
 
 static const char* ERROR_MESSAGE_MONITOR = "Failed executing JVM operation! FATAL ERROR! JNIEnv returned error code ";
 

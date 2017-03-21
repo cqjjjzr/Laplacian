@@ -10,6 +10,7 @@ set(
         SOURCE_FILES
         charlie_laplacian_decoder_essential_FFmpegDecoder.h
         charlie_laplacian_decoder_essential_FFmpegDecoder_Companion.h
+        charlie_laplacian_decoder_essential_FFmpegDecoder_SDLVolumeController.h
         laplacian_essential-ffmpeg_decoder_impl.cpp
         PacketQueue.cpp
         PacketQueue.h
