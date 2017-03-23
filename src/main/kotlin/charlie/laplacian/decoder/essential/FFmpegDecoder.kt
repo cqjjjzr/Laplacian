@@ -6,9 +6,13 @@ import charlie.laplacian.mixer.AudioChannel
 import charlie.laplacian.mixer.Mixer
 import charlie.laplacian.stream.TrackStream
 import charlie.laplacian.stream.essential.FileTrackStream
+import java.util.concurrent.locks.Condition
+import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 
 class FFmpegDecoder: Decoder {
+
     companion object {
         @JvmStatic
         private external fun globalInit()
@@ -18,34 +22,35 @@ class FFmpegDecoder: Decoder {
         }
     }
 
-    private val mixer: Mixer
     private var audioChannel: AudioChannel
 
     @Volatile
     private var paused: Boolean = true
-    @Volatile
     private var pointerAVCodecContext: Long = 0
-    @Volatile
     private var pointerAVFormatContext: Long = 0
-    @Volatile
-    private var pointerPacketQueue: Long = 0
-    @Volatile
-    private var volume: Int = 0
+    private var pointerSwrContext: Long = 0
+
     private var position: Long = 0
     @Volatile
     private var audioStreamIndex: Int = -1
+    private var pauseLock: Lock = ReentrantLock(true)
+    private val pauseCondition: Condition = pauseLock.newCondition()
+
+    private val mixer: Mixer
+    private val numChannel: Int
+    private val sampleRateHz: Float
+    private val bitDepth: Int
 
     override fun play() {
         paused = false
-        playInternal()
-        synchronized (this) {
-            (this as Object).notifyAll()
-        }
+
+        pauseLock.lock()
+        pauseCondition.signalAll()
+        pauseLock.unlock()
     }
 
     override fun pause() {
         paused = true
-        pauseInternal()
     }
 
     override external fun seek(positionMillis: Long)
@@ -61,10 +66,6 @@ class FFmpegDecoder: Decoder {
 
     external fun closeInternal()
 
-    private external fun playInternal()
-
-    private external fun pauseInternal()
-
     private external fun playThread()
 
     private external fun startupNativeLibs(sampleRateHz: Float, bitDepth: Int, numChannel: Int)
@@ -77,16 +78,25 @@ class FFmpegDecoder: Decoder {
         audioChannel.mix(pcmData, offset, length)
     }
 
-    constructor(mixer: Mixer, sampleRateHz: Float, bitDepth: Int, numChannel: Int, stream: TrackStream) {
+    private constructor(mixer: Mixer,
+                        sampleRateHz: Float,
+                        bitDepth: Int,
+                        numChannel: Int) {
         this.mixer = mixer
+        this.sampleRateHz = sampleRateHz
+        this.bitDepth = bitDepth
+        this.numChannel = numChannel
         audioChannel = mixer.openChannel()
+    }
+
+    constructor(mixer: Mixer, sampleRateHz: Float, bitDepth: Int, numChannel: Int, stream: TrackStream)
+            : this(mixer, sampleRateHz, bitDepth, numChannel) {
         initWithStream(stream)
         init(sampleRateHz, bitDepth, numChannel)
     }
 
-    constructor(mixer: Mixer, sampleRateHz: Float, bitDepth: Int, numChannel: Int, url: String) {
-        this.mixer = mixer
-        audioChannel = mixer.openChannel()
+    constructor(mixer: Mixer, sampleRateHz: Float, bitDepth: Int, numChannel: Int, url: String)
+            : this(mixer, sampleRateHz, bitDepth, numChannel) {
         initWithURL(url)
         init(sampleRateHz, bitDepth, numChannel)
     }

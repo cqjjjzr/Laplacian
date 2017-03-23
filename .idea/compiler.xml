@@ -9,7 +9,7 @@
         <module name="Laplacian" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
+    <bytecodeTargetLevel target="1.8">
       <module name="Laplacian" target="1.8" />
     </bytecodeTargetLevel>
   </component>

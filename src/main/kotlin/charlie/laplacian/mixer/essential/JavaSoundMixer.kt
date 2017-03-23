@@ -51,6 +51,7 @@ class JavaSoundChannel(audioFormat: AudioFormat) : AudioChannel {
 
         dataLine.open(audioFormat)
         volumeController = JavaSoundVolumeController()
+        //audioFormat.getProperty()
     }
 
     inner class JavaSoundVolumeController: VolumeController {
