@@ -12,31 +12,31 @@ extern "C" {
 
 AVCodecContext* getAVCodecContext(JNIEnv * env, jobject javaThis) {
     return (AVCodecContext*)
-            env->GetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerAVCodecContext", "L"));
+            env->GetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerAVCodecContext", "J"));
 }
 
 void setAVCodecContext(JNIEnv * env, jobject javaThis, AVCodecContext *avCodecContext) {
-    env->SetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerAVCodecContext", "L")
+    env->SetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerAVCodecContext", "J")
             , (jlong) avCodecContext);
 }
 
 AVFormatContext* getAVFormatContext(JNIEnv * env, jobject javaThis) {
     return (AVFormatContext*)
-            env->GetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerAVFormatContext", "L"));
+            env->GetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerAVFormatContext", "J"));
 }
 
 void setAVFormatContext(JNIEnv * env, jobject javaThis, AVFormatContext *avFormatContext) {
-    env->SetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerAVFormatContext", "L")
+    env->SetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerAVFormatContext", "J")
             , (jlong) avFormatContext);
 }
 
 PacketQueue* getPacketQueue(JNIEnv * env, jobject javaThis) {
     return (PacketQueue*)
-            env->GetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerPacketQueue", "L"));
+            env->GetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerPacketQueue", "J"));
 }
 
 void setPacketQueue(JNIEnv * env, jobject javaThis, PacketQueue *packetQueue) {
-    env->SetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerPacketQueue", "L")
+    env->SetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerPacketQueue", "J")
             , (jlong) packetQueue);
 }
 

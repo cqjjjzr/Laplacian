@@ -30,7 +30,7 @@ void audioCallback(void *pJavaThis, Uint8 *stream, int len) {
     bool needToDetach = false;
     if (javaVM->GetEnv((void **) &env, javaVMVersion) < 0) {
         needToDetach = true;
-        if (!javaVM->AttachCurrentThread((void **) &env, nullptr))
+        if (javaVM->AttachCurrentThreadAsDaemon((void **) &env, nullptr))
             javaVM->DestroyJavaVM();
     }
     AVCodecContext *pCodecCtx = getAVCodecContext(env, javaThis);
@@ -45,12 +45,13 @@ void audioCallback(void *pJavaThis, Uint8 *stream, int len) {
 
     while (len > 0) {
         if (audioBufIndex >= audioBufSize) {
-            AVPacket packet;
-            setPosition(env, javaThis, (long) av_q2d(av_mul_q(AVRational{(int) (packet.pts / 1000), 1 }, pCodecCtx->time_base)));
+			AVPacket packet;
             if (!packetQueue->deQueue(&packet, true))
                 audioSize = -1;
-            else
-                audioSize = audio_decode_frame(pCodecCtx, audioBuff, sizeof(audioBuff), packet);
+			else {
+				setPosition(env, javaThis, (long)av_q2d(av_mul_q(AVRational{ (int)(packet.pts / 1000), 1 }, pCodecCtx->time_base)));
+				audioSize = audio_decode_frame(pCodecCtx, audioBuff, sizeof(audioBuff), packet);
+			}
             if (audioSize < 0) {
                 audioBufSize = 0;
                 memset(audioBuff, 0, audioBufSize);
@@ -145,14 +146,14 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_in
     if (!pIOCtx) env->ThrowNew(env->FindClass("charlie/laplacian/decoder/essential/FFmpegException"),
                                ERROR_MESSAGE_ALLOC_AVIOCONTEXT);
 
-    pFormatCtx->flags = AVFMT_FLAG_CUSTOM_IO;
+    pFormatCtx->flags |= AVFMT_FLAG_CUSTOM_IO;
+	pFormatCtx->pb = pIOCtx;
 
     int retval = avformat_open_input(&pFormatCtx, "", nullptr, nullptr);
     if (retval < 0) {
         throw_retval_exception(env, retval, ERROR_MESSAGE_OPEN_INPUT);
         return;
     }
-    pFormatCtx->pb = pIOCtx;
 
     setAVFormatContext(env, javaThis, pFormatCtx);
 }
@@ -161,7 +162,7 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_in
         (JNIEnv * env, jobject javaThis, jstring url) {
     const char* urlCString;
     urlCString = env->GetStringUTFChars(url, JNI_FALSE);
-    AVFormatContext *pFormatCtx;
+    AVFormatContext *pFormatCtx = nullptr;
     int retval = avformat_open_input(&pFormatCtx, urlCString, nullptr, nullptr);
     env->ReleaseStringUTFChars(url, urlCString);
     if (retval != 0) {
@@ -179,7 +180,7 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_st
 
     int audioStreamIndex = -1;
     for (int i = 0;i < pFormatCtx->nb_streams;i++)
-        if (pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+        if (pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
             audioStreamIndex = i;
             break;
         }
@@ -206,7 +207,10 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_st
 
     pCodecCtx = avcodec_alloc_context3(pCodec);
 
-    CHECK_RETVAL(avcodec_parameters_to_context(pCodecCtx, pCodecPara), ERROR_MESSAGE_UNKNOWN)
+	CHECK_RETVAL(avcodec_parameters_to_context(pCodecCtx, pCodecPara), ERROR_MESSAGE_UNKNOWN)
+
+	jobject *globalJavaThis = new jobject;
+	*globalJavaThis = env->NewGlobalRef(javaThis);
 
     SDL_AudioSpec wanted_spec, spec;
     wanted_spec.freq     = pCodecCtx->sample_rate;
@@ -215,7 +219,7 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_st
     wanted_spec.silence  = 0;
     wanted_spec.samples  = SDL_AUDIO_BUFFER_SIZE;
     wanted_spec.callback = audioCallback;
-    wanted_spec.userdata = env->NewGlobalRef(javaThis);
+    wanted_spec.userdata = globalJavaThis;
 
     CHECK_RETVAL(SDL_OpenAudio(&wanted_spec, &spec), ERROR_MESSAGE_FAILED_OPEN_AUDIO_DEVICE);
     CHECK_RETVAL(avcodec_open2(pCodecCtx, pCodec, nullptr), ERROR_MESSAGE_UNKNOWN);

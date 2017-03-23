@@ -20,18 +20,16 @@ const int iBufSize = 5 * 1024 * 1024;
 int IOReadFunc(void *data, byte *buf, int buf_size) {
     jobject trackStream = *(jobject*) data;
     JNIEnv *env = nullptr;
-    javaVM->AttachCurrentThread((void **) &env, nullptr);
+	javaVM->GetEnv((void**) &env, javaVMVersion);
     jbyteArray tempBuf = env->NewByteArray(buf_size);
     int retval = env->CallIntMethod(trackStream, env->GetMethodID(env->GetObjectClass(trackStream), "read", "([BII)I"),
-                       tempBuf, buf_size);
+                       tempBuf, 0, buf_size);
     if (env->ExceptionCheck()) {
         env->ExceptionClear();
         return -1;
     }
 
     env->GetByteArrayRegion(tempBuf, 0, buf_size, (jbyte *) buf);
-
-    javaVM->DetachCurrentThread();
     return retval == -1 ? 0 : retval;
 }
 
@@ -50,7 +48,7 @@ int64_t IOSeekFunc(void* data, int64_t pos, int whence) {
     jmethodID positionMethod;
     switch (whence) {
         case SEEK_SET: {
-            if (!env->IsInstanceOf(trackStream, env->FindClass("charlie.laplacian.decoder.SeekableTrackStream"))) {
+            if (!env->IsInstanceOf(trackStream, env->FindClass("charlie/laplacian/decoder/SeekableTrackStream"))) {
                 if (force) seekMethod = env->GetMethodID(clazz, "position", "()I");
                 else return -1;
             } else {
@@ -62,7 +60,7 @@ int64_t IOSeekFunc(void* data, int64_t pos, int whence) {
         }
             break;
         case SEEK_CUR: {
-            if (!env->IsInstanceOf(trackStream, env->FindClass("charlie.laplacian.decoder.SeekableTrackStream"))) {
+            if (!env->IsInstanceOf(trackStream, env->FindClass("charlie/laplacian/decoder/SeekableTrackStream"))) {
                 if (force) seekMethod = env->GetMethodID(clazz, "position", "()I");
                 else return -1;
             } else {
@@ -77,13 +75,13 @@ int64_t IOSeekFunc(void* data, int64_t pos, int whence) {
         }
             break;
         case SEEK_END: {
-            if (!env->IsInstanceOf(trackStream, env->FindClass("charlie.laplacian.decoder.SeekableTrackStream"))) {
+            if (!env->IsInstanceOf(trackStream, env->FindClass("charlie/laplacian/decoder/SeekableTrackStream"))) {
                 if (force) seekMethod = env->GetMethodID(clazz, "position", "()I");
                 else return -1;
             } else {
                 seekMethod = env->GetMethodID(env->GetObjectClass(trackStream), "seek", "(I)V");
             }
-            if (!env->IsInstanceOf(trackStream, env->FindClass("charlie.laplacian.decoder.SizeKnownStream")))
+            if (!env->IsInstanceOf(trackStream, env->FindClass("charlie/laplacian/decoder/SizeKnownStream")))
                 return -1;
             positionMethod = env->GetMethodID(clazz, "position", "()I");
             int64_t absPos2 = env->CallIntMethod(trackStream, env->GetMethodID(clazz, "size", "()I")) - pos;
@@ -94,7 +92,7 @@ int64_t IOSeekFunc(void* data, int64_t pos, int whence) {
         }
             break;
         case AVSEEK_SIZE: {
-            if (!env->IsInstanceOf(trackStream, env->FindClass("charlie.laplacian.decoder.SizeKnownStream")))
+            if (!env->IsInstanceOf(trackStream, env->FindClass("charlie/laplacian/decoder/SizeKnownStream")))
                 return -1;
             retval = env->CallIntMethod(trackStream, env->GetMethodID(clazz, "position", "()I"));
         }
@@ -109,14 +107,17 @@ int64_t IOSeekFunc(void* data, int64_t pos, int whence) {
 
 AVIOContext *getIOContext(JNIEnv * env, jobject javaThis, jobject trackStream) {
     byte *pBuffer = new byte[iBufSize];
+	jobject globalTrackStream = env->NewGlobalRef(trackStream);
+	jobject *pStream = new jobject;
+	*pStream = globalTrackStream;
     AVIOContext *pIOCtx = avio_alloc_context(pBuffer, iBufSize,
                                              false,
-                                             env->NewGlobalRef(trackStream),
+                                             pStream,
                                              IOReadFunc,
                                              nullptr, // Write disabled
-                                            IOSeekFunc);
+                                             IOSeekFunc);
     if (!pIOCtx) return nullptr;
-    pIOCtx->seekable = env->IsInstanceOf(trackStream, env->FindClass("charlie.laplacian.decoder.SeekableTrackStream"));
+    pIOCtx->seekable = env->IsInstanceOf(trackStream, env->FindClass("charlie/laplacian/decoder/SeekableTrackStream"));
     return pIOCtx;
 }
 
