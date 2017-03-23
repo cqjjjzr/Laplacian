@@ -10,6 +10,10 @@ class FFmpegDecoder(defaultVolume: Int): Decoder {
     companion object {
         @JvmStatic
         private external fun globalInit()
+        fun init() {
+            System.loadLibrary("libFFmpegDecoder")
+            globalInit()
+        }
     }
 
     private val volumeController = SDLVolumeController(defaultVolume)
@@ -81,10 +85,10 @@ class FFmpegDecoder(defaultVolume: Int): Decoder {
     }
 
     private fun startupThread() {
-        thread { playThread() }.apply {
-            name = "FFmpegDecoder-PlayThread-" + hashCode()
-            isDaemon = true
-            start()
+        thread (start = true,
+                name = "FFmpegDecoder-PlayThread-" + hashCode(),
+                isDaemon = true) {
+            playThread()
         }
     }
 
