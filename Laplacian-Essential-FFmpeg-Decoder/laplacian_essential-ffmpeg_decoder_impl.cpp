@@ -22,16 +22,6 @@ static const int MAX_AUDIO_FRAME_SIZE = 192000;
 static const int SDL_AUDIO_BUFFER_SIZE = 1024;
 
 extern "C"{
-JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_playInternal
-        (JNIEnv * env, jobject javaThis) {
-
-}
-
-JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pauseInternal
-        (JNIEnv * env, jobject javaThis) {
-
-}
-
 JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_seek
         (JNIEnv * env, jobject javaThis, jlong positionMillis) {
     AVRational position = {
@@ -49,7 +39,7 @@ JNIEXPORT jlong JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_d
     return getAVFormatContext(env, javaThis)->duration / 1000;
 }
 
-JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_close
+JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_closeInternal
         (JNIEnv * env, jobject javaThis) {
     setPaused(env, javaThis, true);
     //TODO close
@@ -60,8 +50,6 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_cl
     avformat_close_input(&pFormatCtx);
     setAVFormatContext(env, javaThis, nullptr);
     setAVCodecContext(env, javaThis, nullptr);
-    delete getPacketQueue(env, javaThis);
-    setPacketQueue(env, javaThis, nullptr);
 }
 
 JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_playThread
@@ -70,10 +58,10 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pl
 
     AVPacket packet;
     int audioStreamIndex = getAudioStreamIndex(env, javaThis);
-    PacketQueue packetQueue = *getPacketQueue(env, javaThis);
     while (av_read_frame(pFormatCtx, &packet) >= 0) {
-        if (packet.stream_index == audioStreamIndex)
-            packetQueue.enQueue(&packet);
+        if (packet.stream_index == audioStreamIndex) {
+
+        }
         else
             av_packet_unref(&packet);
         while (paused(env, javaThis)) {
@@ -119,6 +107,8 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_in
 
 JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_startupNativeLibs
         (JNIEnv * env, jobject javaThis, jfloat sampleRateHz, jint bitDepth, jint numChannels) {
+    jclass clazz = env->GetObjectClass(javaThis);
+
     AVFormatContext *pFormatCtx = getAVFormatContext(env, javaThis);
 
     CHECK_RETVAL(avformat_find_stream_info(pFormatCtx, nullptr), ERROR_MESSAGE_FIND_STREAM)
@@ -159,10 +149,18 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_st
 
     CHECK_RETVAL(avcodec_open2(pCodecCtx, pCodec, nullptr), ERROR_MESSAGE_UNKNOWN);
 
+    SwrContext *pSwrCtx = swr_alloc();
+
+    pSwrCtx = swr_alloc_set_opts(pSwrCtx,
+                                 av_get_default_channel_layout(env->GetIntField(javaThis, env->GetFieldID(clazz, "numChannel", "I")),
+                                 AV_SAMPLE_FMT_S16
+                                 env->GetIntField(javaThis, env->GetFieldID(clazz, "sampleRateHz", "I"),
+                                 av_get_default_channel_layout(pCodecCtx->channels),
+                                 )
+
     setAVCodecContext(env, javaThis, pCodecCtx);
     setAVFormatContext(env, javaThis, pFormatCtx);
     setAudioStreamIndex(env, javaThis, audioStreamIndex);
-    setPacketQueue(env, javaThis, new PacketQueue);
 }
 
 JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_globalInit

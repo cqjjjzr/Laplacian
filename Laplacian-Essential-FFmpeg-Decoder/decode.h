@@ -6,7 +6,6 @@ extern "C" {
 #include <libswresample/swresample.h>
 };
 #include <SDL2/SDL_stdinc.h>
-#include "PacketQueue.h"
 
 // FROM https://github.com/brookicv/FFMPEG-study/blob/master/FFmpeg-playAudio.cpp
 // BY brookicv

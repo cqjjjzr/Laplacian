@@ -33,22 +33,6 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_cl
 
 /*
  * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
- * Method:    playInternal
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_playInternal
-  (JNIEnv *, jobject);
-
-/*
- * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
- * Method:    pauseInternal
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pauseInternal
-  (JNIEnv *, jobject);
-
-/*
- * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
  * Method:    playThread
  * Signature: ()V
  */
