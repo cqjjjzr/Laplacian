@@ -1,4 +1,4 @@
-package charlie.laplacian.decoder
+package charlie.laplacian.stream
 
 interface SizeKnownTrackStream: TrackStream {
     fun size(): Int

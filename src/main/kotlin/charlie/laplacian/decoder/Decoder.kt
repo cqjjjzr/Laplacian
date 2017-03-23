@@ -7,7 +7,5 @@ interface Decoder {
     fun positionMillis(): Long
     fun durationMillis(): Long
 
-    fun getVolumeController(): VolumeController
-
     fun close()
 }

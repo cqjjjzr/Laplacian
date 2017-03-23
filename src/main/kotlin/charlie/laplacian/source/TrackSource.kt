@@ -1,6 +1,6 @@
 package charlie.laplacian.source
 
-import charlie.laplacian.decoder.TrackStream
+import charlie.laplacian.stream.TrackStream
 
 interface TrackSource {
     fun getName(): String

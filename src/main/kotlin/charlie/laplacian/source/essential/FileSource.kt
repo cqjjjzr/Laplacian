@@ -1,8 +1,8 @@
 package charlie.laplacian.source.essential
 
 import charlie.laplacian.I18n
-import charlie.laplacian.decoder.TrackStream
-import charlie.laplacian.decoder.essential.FileTrackStream
+import charlie.laplacian.stream.TrackStream
+import charlie.laplacian.stream.essential.FileTrackStream
 import charlie.laplacian.source.*
 import java.io.File
 import java.io.FileNotFoundException

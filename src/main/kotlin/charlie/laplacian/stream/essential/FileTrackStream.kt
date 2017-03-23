@@ -1,7 +1,7 @@
-package charlie.laplacian.decoder.essential
+package charlie.laplacian.stream.essential
 
-import charlie.laplacian.decoder.SeekableTrackStream
-import charlie.laplacian.decoder.SizeKnownTrackStream
+import charlie.laplacian.stream.SeekableTrackStream
+import charlie.laplacian.stream.SizeKnownTrackStream
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Path

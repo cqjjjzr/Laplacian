@@ -2,11 +2,13 @@ package charlie.laplacian.decoder.essential
 
 import charlie.laplacian.decoder.Decoder
 import charlie.laplacian.decoder.DecoderFactory
-import charlie.laplacian.decoder.TrackStream
-import charlie.laplacian.decoder.VolumeController
+import charlie.laplacian.mixer.AudioChannel
+import charlie.laplacian.mixer.Mixer
+import charlie.laplacian.stream.TrackStream
+import charlie.laplacian.stream.essential.FileTrackStream
 import kotlin.concurrent.thread
 
-class FFmpegDecoder(defaultVolume: Int): Decoder {
+class FFmpegDecoder: Decoder {
     companion object {
         @JvmStatic
         private external fun globalInit()
@@ -16,7 +18,9 @@ class FFmpegDecoder(defaultVolume: Int): Decoder {
         }
     }
 
-    private val volumeController = SDLVolumeController(defaultVolume)
+    private val mixer: Mixer
+    private var audioChannel: AudioChannel
+
     @Volatile
     private var paused: Boolean = true
     @Volatile
@@ -28,7 +32,6 @@ class FFmpegDecoder(defaultVolume: Int): Decoder {
     @Volatile
     private var volume: Int = 0
     private var position: Long = 0
-
     @Volatile
     private var audioStreamIndex: Int = -1
 
@@ -51,11 +54,12 @@ class FFmpegDecoder(defaultVolume: Int): Decoder {
 
     override external fun durationMillis(): Long
 
-    override external fun close()
+    override fun close() {
+        closeInternal()
+        mixer.closeChannel(audioChannel)
+    }
 
-    override fun getVolumeController(): VolumeController = volumeController
-
-    private fun getVolumeInternal(): Int = volumeController.currentInInt()
+    external fun closeInternal()
 
     private external fun playInternal()
 
@@ -63,24 +67,32 @@ class FFmpegDecoder(defaultVolume: Int): Decoder {
 
     private external fun playThread()
 
-    private external fun startupNativeLibs()
+    private external fun startupNativeLibs(sampleRateHz: Float, bitDepth: Int, numChannel: Int)
 
     private external fun initWithStream(stream: TrackStream)
 
     private external fun initWithURL(url: String)
 
-    constructor(defaultVolume: Int, stream: TrackStream) : this(defaultVolume) {
+    private fun internalMix(pcmData: ByteArray, offset: Int, length: Int) {
+        audioChannel.mix(pcmData, offset, length)
+    }
+
+    constructor(mixer: Mixer, sampleRateHz: Float, bitDepth: Int, numChannel: Int, stream: TrackStream) {
+        this.mixer = mixer
+        audioChannel = mixer.openChannel()
         initWithStream(stream)
-        init()
+        init(sampleRateHz, bitDepth, numChannel)
     }
 
-    constructor(defaultVolume: Int, url: String) : this(defaultVolume) {
+    constructor(mixer: Mixer, sampleRateHz: Float, bitDepth: Int, numChannel: Int, url: String) {
+        this.mixer = mixer
+        audioChannel = mixer.openChannel()
         initWithURL(url)
-        init()
+        init(sampleRateHz, bitDepth, numChannel)
     }
 
-    private fun init() {
-        startupNativeLibs()
+    private fun init(sampleRateHz: Float, bitDepth: Int, numChannel: Int) {
+        startupNativeLibs(sampleRateHz, bitDepth, numChannel)
         startupThread()
     }
 
@@ -91,27 +103,13 @@ class FFmpegDecoder(defaultVolume: Int): Decoder {
             playThread()
         }
     }
-
-    private inner class SDLVolumeController(private var volume: Int): VolumeController {
-        override fun max(): Float = 128.0f
-
-        override fun min(): Float = 0.0f
-
-        override fun current(): Float = volume.toFloat()
-
-        fun currentInInt(): Int = volume
-
-        override fun set(value: Float) {
-            volume = value.toInt()
-        }
-
-    }
 }
 
 class FFmpegDecoderFactory: DecoderFactory {
-    override fun getDecoder(previousVolume: Float, stream: TrackStream): Decoder {
-        if (stream is FileTrackStream) return FFmpegDecoder(previousVolume.toInt(), stream.getPath().toString())
+    override fun getDecoder(mixer: Mixer, sampleRateHz: Float, bitDepth: Int, numChannel: Int, stream: TrackStream): Decoder {
+        if (stream is FileTrackStream)
+            return FFmpegDecoder(mixer, sampleRateHz, bitDepth, numChannel, stream.getPath().toString())
         // TODO Add more simple URLStream here
-        return FFmpegDecoder(previousVolume.toInt(), stream)
+        return FFmpegDecoder(mixer, sampleRateHz, bitDepth, numChannel, stream)
     }
 }

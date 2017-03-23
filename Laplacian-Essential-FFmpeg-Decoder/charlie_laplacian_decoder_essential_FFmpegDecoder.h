@@ -25,10 +25,10 @@ JNIEXPORT jlong JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_d
 
 /*
  * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
- * Method:    close
+ * Method:    closeInternal
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_close
+JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_closeInternal
   (JNIEnv *, jobject);
 
 /*
@@ -58,15 +58,15 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pl
 /*
  * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
  * Method:    startupNativeLibs
- * Signature: ()V
+ * Signature: (FII)V
  */
 JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_startupNativeLibs
-  (JNIEnv *, jobject);
+  (JNIEnv *, jobject, jfloat, jint, jint);
 
 /*
  * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
  * Method:    initWithStream
- * Signature: (Lcharlie/laplacian/decoder/TrackStream;)V
+ * Signature: (Lcharlie/laplacian/stream/TrackStream;)V
  */
 JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_initWithStream
   (JNIEnv *, jobject, jobject);

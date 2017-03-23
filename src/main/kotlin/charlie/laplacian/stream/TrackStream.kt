@@ -1,4 +1,4 @@
-package charlie.laplacian.decoder
+package charlie.laplacian.stream
 
 interface TrackStream {
     fun position(): Int

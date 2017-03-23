@@ -25,7 +25,7 @@ int audio_decode_frame(AVCodecContext *aCodecCtx, uint8_t *audio_buf, int buf_si
 	if (ret < 0 && ret != AVERROR_EOF)
 		return -1;
 
-	int index = av_get_channel_layout_channel_index((uint64_t) av_get_default_channel_layout(4), AV_CH_FRONT_CENTER);
+	//int index = av_get_channel_layout_channel_index((uint64_t) av_get_default_channel_layout(4), AV_CH_FRONT_CENTER);
 
 	// 设置通道数或channel_layout
 	if (frame->channels > 0 && frame->channel_layout == 0)
