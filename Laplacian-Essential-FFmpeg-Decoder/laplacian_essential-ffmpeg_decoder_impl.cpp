@@ -8,7 +8,6 @@ using namespace std;
 
 #include "shortcuts.h"
 #include "error_msgs.h"
-#include "decode.h"
 #include "customio.h"
 
 extern "C" {
