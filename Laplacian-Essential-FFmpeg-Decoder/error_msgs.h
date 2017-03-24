@@ -9,6 +9,7 @@ static const char* ERROR_MESSAGE_FAILED_OPEN_AUDIO_DEVICE = "Failed opening audi
 static const char* ERROR_MESSAGE_UNKNOWN = "Failed to open input, unknown error! FFmpeg function returned error code ";
 static const char* ERROR_MESSAGE_ALLOC_AVIOCONTEXT = "Failed to alloc AVIOContext!";
 static const char* ERROR_MESSAGE_PROBE = "Failed to probe stream format! av_probe_input_buffer returned error code ";
+static const char* ERROR_MESSAGE_DECODE = "Failed to decode! FFmpeg func returned error code ";
 
 static const char* ERROR_MESSAGE_MONITOR = "Failed executing JVM operation! FATAL ERROR! JNIEnv returned error code ";
 

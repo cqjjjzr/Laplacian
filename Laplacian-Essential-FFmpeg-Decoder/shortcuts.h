@@ -10,58 +10,38 @@ extern "C" {
 
 #define CHECK_RETVAL(retval, errorMsgRoot) if (retval < 0) {throw_retval_exception(env, retval, errorMsgRoot);return;}
 
-AVCodecContext* getAVCodecContext(JNIEnv * env, jobject javaThis) {
+AVCodecContext* getAVCodecContext(JNIEnv * env, jobject javaThis, jclass clazz) {
     return (AVCodecContext*)
-            env->GetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerAVCodecContext", "J"));
+            env->GetLongField(javaThis, env->GetFieldID(clazz, "pointerAVCodecContext", "J"));
 }
 
-void setAVCodecContext(JNIEnv * env, jobject javaThis, AVCodecContext *avCodecContext) {
-    env->SetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerAVCodecContext", "J")
+void setAVCodecContext(JNIEnv * env, jobject javaThis, jclass clazz, AVCodecContext *avCodecContext) {
+    env->SetLongField(javaThis, env->GetFieldID(clazz, "pointerAVCodecContext", "J")
             , (jlong) avCodecContext);
 }
 
-AVFormatContext* getAVFormatContext(JNIEnv * env, jobject javaThis) {
+AVFormatContext* getAVFormatContext(JNIEnv * env, jobject javaThis, jclass clazz) {
     return (AVFormatContext*)
-            env->GetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerAVFormatContext", "J"));
+            env->GetLongField(javaThis, env->GetFieldID(clazz, "pointerAVFormatContext", "J"));
 }
 
-void setAVFormatContext(JNIEnv * env, jobject javaThis, AVFormatContext *avFormatContext) {
-    env->SetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerAVFormatContext", "J")
+void setAVFormatContext(JNIEnv * env, jobject javaThis, jclass clazz, AVFormatContext *avFormatContext) {
+    env->SetLongField(javaThis, env->GetFieldID(clazz, "pointerAVFormatContext", "J")
             , (jlong) avFormatContext);
 }
 
-int getAudioStreamIndex(JNIEnv * env, jobject javaThis) {
+int getAudioStreamIndex(JNIEnv * env, jclass clazz, jobject javaThis) {
     return (int)
-            env->GetIntField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "audioStreamIndex", "I"));
+            env->GetIntField(javaThis, env->GetFieldID(clazz, "audioStreamIndex", "I"));
 }
 
-void setAudioStreamIndex(JNIEnv * env, jobject javaThis, int audioStreamIndex) {
-    env->SetIntField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "audioStreamIndex", "I")
+void setAudioStreamIndex(JNIEnv * env, jobject javaThis, jclass clazz, int audioStreamIndex) {
+    env->SetIntField(javaThis, env->GetFieldID(clazz, "audioStreamIndex", "I")
             , (jint) audioStreamIndex);
 }
 
-SwrContext* getSwrContext(JNIEnv * env, jobject javaThis) {
-    return (SwrContext*)
-            env->GetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerSwrContext", "J"));
-}
-
-void setSwrContext(JNIEnv * env, jobject javaThis, SwrContext *swrContext) {
-    env->SetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "pointerSwrContext", "J")
-            , (jlong) swrContext);
-}
-
-bool paused(JNIEnv * env, jobject javaThis) {
-    return (bool)
-            env->GetBooleanField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "paused", "Z"));
-}
-
-void setPaused(JNIEnv * env, jobject javaThis, bool paused) {
-    env->SetBooleanField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "paused", "Z")
-            , (jboolean) paused);
-}
-
-void setPosition(JNIEnv * env, jobject javaThis, long position) {
-    env->SetLongField(javaThis, env->GetFieldID(env->GetObjectClass(javaThis), "position", "J")
+void setPosition(JNIEnv * env, jobject javaThis, jclass clazz, long position) {
+    env->SetLongField(javaThis, env->GetFieldID(clazz, "position", "J")
             , (jlong) position);
 }
 

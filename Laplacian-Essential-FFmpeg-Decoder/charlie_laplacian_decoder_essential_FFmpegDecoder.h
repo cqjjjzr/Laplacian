@@ -17,14 +17,6 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_se
 
 /*
  * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
- * Method:    durationMillis
- * Signature: ()J
- */
-JNIEXPORT jlong JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_durationMillis
-  (JNIEnv *, jobject);
-
-/*
- * Class:     charlie_laplacian_decoder_essential_FFmpegDecoder
  * Method:    closeInternal
  * Signature: ()V
  */

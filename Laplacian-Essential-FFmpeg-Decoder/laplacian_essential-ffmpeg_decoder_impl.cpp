@@ -24,50 +24,108 @@ static const int SDL_AUDIO_BUFFER_SIZE = 1024;
 extern "C"{
 JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_seek
         (JNIEnv * env, jobject javaThis, jlong positionMillis) {
+    jclass clazz = env->GetObjectClass(javaThis);
+
     AVRational position = {
             1, (int) (positionMillis / 1000)
     };
-    AVCodecContext *pCodecCtx = getAVCodecContext(env, javaThis);
+    AVCodecContext *pCodecCtx = getAVCodecContext(env, javaThis, clazz);
     int64_t timestamp = (int64_t) av_q2d(av_mul_q(pCodecCtx->time_base, position));
-    av_seek_frame(getAVFormatContext(env, javaThis),
-                  getAudioStreamIndex(env, javaThis), timestamp , AVSEEK_FLAG_BACKWARD);
-    setPosition(env, javaThis, (long) positionMillis);
-}
-
-JNIEXPORT jlong JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_durationMillis
-        (JNIEnv * env, jobject javaThis) {
-    return getAVFormatContext(env, javaThis)->duration / 1000;
+    av_seek_frame(getAVFormatContext(env, javaThis, clazz),
+                  getAudioStreamIndex(env, clazz, javaThis), timestamp , AVSEEK_FLAG_BACKWARD);
+    setPosition(env, javaThis, clazz, (long) positionMillis);
 }
 
 JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_closeInternal
         (JNIEnv * env, jobject javaThis) {
-    setPaused(env, javaThis, true);
     //TODO close
 
-    AVFormatContext *pFormatCtx = getAVFormatContext(env, javaThis);
+    AVFormatContext *pFormatCtx = getAVFormatContext(env, javaThis, env->GetObjectClass(javaThis));
     delete pFormatCtx->pb->buffer;
     av_free(pFormatCtx->pb);
     avformat_close_input(&pFormatCtx);
-    setAVFormatContext(env, javaThis, nullptr);
-    setAVCodecContext(env, javaThis, nullptr);
 }
 
 JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_playThread
         (JNIEnv * env, jobject javaThis) {
-    AVFormatContext *pFormatCtx = getAVFormatContext(env, javaThis);
+    jclass clazz = env->GetObjectClass(javaThis);
+    jmethodID mixMethod = env->GetMethodID(clazz, "internalMix", "([BII)V");
+    jclass lockClazz = env->FindClass("java/util/concurrent/locks/Lock");
+    jmethodID lockMethod = env->GetMethodID(lockClazz, "lock", "()V");
+    jmethodID unlockMethod = env->GetMethodID(lockClazz, "unlock", "([)V");
+    jmethodID waitMethod = env->GetMethodID(env->FindClass("java/util/concurrent/locks"), "await", "()V");
+    jobject lockObject = env->GetObjectField(javaThis, env->GetFieldID(clazz, "pauseLock", "Ljava/util/concurrent/locks/Lock;"));
+    jobject condObject = env->GetObjectField(javaThis, env->GetFieldID(clazz, "pauseCondition", "Ljava/util/concurrent/locks/Condition;"));
+    jfieldID pausedField = env->GetFieldID(env->GetObjectClass(javaThis), "paused", "Z");
+
+    AVFormatContext *pFormatCtx = getAVFormatContext(env, javaThis, clazz);
+    AVCodecContext *pCodecCtx = getAVCodecContext(env, javaThis, clazz);
+    SwrContext *pSwrCtx = swr_alloc();
+
+    int bitDepth = env->GetIntField(javaThis, env->GetFieldID(clazz, "bitDepth", "I"));
+    AVSampleFormat sampleFormat = bitDepth == 16 ? AV_SAMPLE_FMT_S16 : (bitDepth == 32 ? AV_SAMPLE_FMT_S32 : AV_SAMPLE_FMT_S64);
+
+    pSwrCtx = swr_alloc_set_opts(pSwrCtx,
+                                 av_get_default_channel_layout(env->GetIntField(javaThis, env->GetFieldID(clazz, "numChannel", "I"))),
+                                 sampleFormat,
+                                 env->GetIntField(javaThis, env->GetFieldID(clazz, "sampleRateHz", "I")),
+                                 av_get_default_channel_layout(pCodecCtx->channels),
+                                 pCodecCtx->sample_fmt,
+                                 pCodecCtx->sample_rate,
+                                 0, nullptr
+    );
+    swr_init(pSwrCtx);
 
     AVPacket packet;
-    int audioStreamIndex = getAudioStreamIndex(env, javaThis);
+    AVFrame *frame = nullptr;
+    int data_size;
+    uint8_t *audio_buf = new uint8_t[(MAX_AUDIO_FRAME_SIZE * 3) / 2];
+    jbyteArray jBuf = env->NewByteArray((MAX_AUDIO_FRAME_SIZE * 3) / 2);
+    int audioStreamIndex = getAudioStreamIndex(env, clazz, javaThis);
     while (av_read_frame(pFormatCtx, &packet) >= 0) {
         if (packet.stream_index == audioStreamIndex) {
+            int ret = avcodec_receive_packet(pCodecCtx, &packet);
+            if (ret < 0 && ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
+                env->CallVoidMethod(javaThis, env->GetMethodID(clazz, "close", "()V"));
+                throw_retval_exception(env, ret, ERROR_MESSAGE_DECODE);
+                return;
+            }
 
+            ret = avcodec_receive_frame(pCodecCtx, frame);
+            if (ret < 0 && ret != AVERROR_EOF) {
+                env->CallVoidMethod(javaThis, env->GetMethodID(clazz, "close", "()V"));
+                throw_retval_exception(env, ret, ERROR_MESSAGE_DECODE);
+                return;
+            }
+            assert(frame != nullptr);
+
+            if (frame->channels > 0 && frame->channel_layout == 0)
+                frame->channel_layout = (uint64_t) av_get_default_channel_layout(frame->channels);
+            else if (frame->channels == 0 && frame->channel_layout > 0)
+                frame->channels = av_get_channel_layout_nb_channels(frame->channel_layout);
+
+            int64_t dst_nb_samples =
+                    av_rescale_rnd(swr_get_delay(pSwrCtx, frame->sample_rate) +
+                                           frame->nb_samples, frame->sample_rate, frame->sample_rate, AVRounding(1));
+            int nb = swr_convert(pSwrCtx, &audio_buf, (int) dst_nb_samples, (const uint8_t**)frame->data, frame->nb_samples);
+            data_size = frame->channels * nb * av_get_bytes_per_sample(sampleFormat);
+
+            env->SetByteArrayRegion(jBuf, 0, data_size, (const jbyte *) audio_buf);
+            env->CallVoidMethod(javaThis, mixMethod, jBuf, 0, data_size);
+            if (env->ExceptionCheck()) {
+                env->CallVoidMethod(javaThis, env->GetMethodID(clazz, "close", "()V"));
+                throw_retval_exception(env, ret, ERROR_MESSAGE_DECODE);
+                return;
+            }
+
+            av_frame_free(&frame);
         }
         else
             av_packet_unref(&packet);
-        while (paused(env, javaThis)) {
-            CHECK_RETVAL(env->MonitorEnter(javaThis), ERROR_MESSAGE_MONITOR);
-            env->CallVoidMethod(javaThis, env->GetMethodID(env->FindClass("java/lang/Object"), "wait", "()V"));
-            CHECK_RETVAL(env->MonitorExit(javaThis), ERROR_MESSAGE_MONITOR);
+        while (env->GetBooleanField(javaThis, pausedField)) {
+            env->CallVoidMethod(lockObject, lockMethod);
+            env->CallVoidMethod(condObject, waitMethod);
+            env->CallVoidMethod(lockObject, unlockMethod);
         }
     }
 }
@@ -88,7 +146,7 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_in
         return;
     }
 
-    setAVFormatContext(env, javaThis, pFormatCtx);
+    setAVFormatContext(env, javaThis, env->GetObjectClass(javaThis), pFormatCtx);
 }
 
 JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_initWithURL
@@ -101,7 +159,7 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_in
     if (retval != 0) {
         throw_retval_exception(env, retval, ERROR_MESSAGE_OPEN_INPUT);
     } else {
-        setAVFormatContext(env, javaThis, pFormatCtx);
+        setAVFormatContext(env, javaThis, env->GetObjectClass(javaThis), pFormatCtx);
     }
 }
 
@@ -109,7 +167,7 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_st
         (JNIEnv * env, jobject javaThis, jfloat sampleRateHz, jint bitDepth, jint numChannels) {
     jclass clazz = env->GetObjectClass(javaThis);
 
-    AVFormatContext *pFormatCtx = getAVFormatContext(env, javaThis);
+    AVFormatContext *pFormatCtx = getAVFormatContext(env, javaThis, clazz);
 
     CHECK_RETVAL(avformat_find_stream_info(pFormatCtx, nullptr), ERROR_MESSAGE_FIND_STREAM)
 
@@ -149,18 +207,10 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_st
 
     CHECK_RETVAL(avcodec_open2(pCodecCtx, pCodec, nullptr), ERROR_MESSAGE_UNKNOWN);
 
-    SwrContext *pSwrCtx = swr_alloc();
-
-    pSwrCtx = swr_alloc_set_opts(pSwrCtx,
-                                 av_get_default_channel_layout(env->GetIntField(javaThis, env->GetFieldID(clazz, "numChannel", "I")),
-                                 AV_SAMPLE_FMT_S16
-                                 env->GetIntField(javaThis, env->GetFieldID(clazz, "sampleRateHz", "I"),
-                                 av_get_default_channel_layout(pCodecCtx->channels),
-                                 )
-
-    setAVCodecContext(env, javaThis, pCodecCtx);
-    setAVFormatContext(env, javaThis, pFormatCtx);
-    setAudioStreamIndex(env, javaThis, audioStreamIndex);
+    setAVCodecContext(env, javaThis, clazz, pCodecCtx);
+    setAudioStreamIndex(env, javaThis, clazz, audioStreamIndex);
+    env->SetLongField(javaThis, env->GetFieldID(clazz, "duration", "J"),
+                      getAVFormatContext(env, javaThis, clazz)->duration / 1000);
 }
 
 JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_globalInit

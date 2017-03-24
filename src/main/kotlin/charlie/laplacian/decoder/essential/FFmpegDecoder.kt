@@ -28,9 +28,11 @@ class FFmpegDecoder: Decoder {
     private var paused: Boolean = true
     private var pointerAVCodecContext: Long = 0
     private var pointerAVFormatContext: Long = 0
-    private var pointerSwrContext: Long = 0
 
+    @Volatile
     private var position: Long = 0
+    private var duration: Long = 0
+
     @Volatile
     private var audioStreamIndex: Int = -1
     private var pauseLock: Lock = ReentrantLock(true)
@@ -57,7 +59,7 @@ class FFmpegDecoder: Decoder {
 
     override fun positionMillis(): Long = position
 
-    override external fun durationMillis(): Long
+    override fun durationMillis(): Long = duration
 
     override fun close() {
         closeInternal()
@@ -86,6 +88,8 @@ class FFmpegDecoder: Decoder {
         this.sampleRateHz = sampleRateHz
         this.bitDepth = bitDepth
         this.numChannel = numChannel
+        if (bitDepth != 32 && bitDepth != 16 && bitDepth != 64)
+            throw IllegalArgumentException("bit depth must be 32, 64 or 16")
         audioChannel = mixer.openChannel()
     }
 

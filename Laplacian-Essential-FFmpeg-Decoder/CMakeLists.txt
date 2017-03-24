@@ -12,7 +12,7 @@ set(
         charlie_laplacian_decoder_essential_FFmpegDecoder_Companion.h
         charlie_laplacian_decoder_essential_FFmpegDecoder_SDLVolumeController.h
         laplacian_essential-ffmpeg_decoder_impl.cpp
-        shortcuts.h error_msgs.h decode.h customio.h)
+        shortcuts.h error_msgs.h customio.h)
 
 set(FFMPEG_INCLUDE "$ENV{FFMPEG_DEV_HOME}/include/")
 set(FFMPEG_LIBRARY "$ENV{FFMPEG_DEV_HOME}/lib/")
