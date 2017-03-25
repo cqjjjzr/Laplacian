@@ -5,14 +5,12 @@ import charlie.laplacian.decoder.DecoderFactory
 import charlie.laplacian.mixer.AudioChannel
 import charlie.laplacian.mixer.Mixer
 import charlie.laplacian.stream.TrackStream
-import charlie.laplacian.stream.essential.FileTrackStream
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 
 class FFmpegDecoder: Decoder {
-
     companion object {
         @JvmStatic
         private external fun globalInit()
@@ -45,6 +43,7 @@ class FFmpegDecoder: Decoder {
 
     override fun play() {
         paused = false
+        audioChannel.open()
 
         pauseLock.lock()
         pauseCondition.signalAll()
@@ -53,6 +52,7 @@ class FFmpegDecoder: Decoder {
 
     override fun pause() {
         paused = true
+        audioChannel.pause()
     }
 
     override external fun seek(positionMillis: Long)
@@ -114,15 +114,20 @@ class FFmpegDecoder: Decoder {
         thread (start = true,
                 name = "FFmpegDecoder-PlayThread-" + hashCode(),
                 isDaemon = true) {
-            playThread()
+            try {
+                playThread()
+                close()
+            } catch(ex: Exception) {
+                ex.printStackTrace()
+            }
         }
     }
 }
 
 class FFmpegDecoderFactory: DecoderFactory {
     override fun getDecoder(mixer: Mixer, sampleRateHz: Float, bitDepth: Int, numChannel: Int, stream: TrackStream): Decoder {
-        if (stream is FileTrackStream)
-            return FFmpegDecoder(mixer, sampleRateHz, bitDepth, numChannel, stream.getPath().toString())
+        //if (stream is FileTrackStream)
+            //return FFmpegDecoder(mixer, sampleRateHz, bitDepth, numChannel, stream.getPath().toString())
         // TODO Add more simple URLStream here
         return FFmpegDecoder(mixer, sampleRateHz, bitDepth, numChannel, stream)
     }

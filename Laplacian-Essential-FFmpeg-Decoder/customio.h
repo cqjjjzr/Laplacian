@@ -1,3 +1,4 @@
+#pragma once
 #ifndef LAPLACIAN_ESSENTIAL_FFMPEG_DECODER_CUSTOMIO_H
 #define LAPLACIAN_ESSENTIAL_FFMPEG_DECODER_CUSTOMIO_H
 
@@ -15,22 +16,31 @@ extern "C" {
 static JavaVM *javaVM = nullptr;
 static jint javaVMVersion;
 
-const int iBufSize = 5 * 1024 * 1024;
+static jclass clazzSizeKnownStream = nullptr;
+static jclass clazzSeekableStream = nullptr;
+static jclass clazzTrackStream = nullptr;
+
+static jmethodID readMethod = nullptr;
+static jmethodID positionMethod = nullptr;
+static jmethodID seekMethod = nullptr;
+static jmethodID forceSeekMethod = nullptr;
+static jmethodID sizeMethod = nullptr;
+
+const int iBufSize = 1024 * 1024;
 
 int IOReadFunc(void *data, byte *buf, int buf_size) {
     jobject trackStream = *(jobject*) data;
     JNIEnv *env = nullptr;
 	javaVM->GetEnv((void**) &env, javaVMVersion);
     jbyteArray tempBuf = env->NewByteArray(buf_size);
-    int retval = env->CallIntMethod(trackStream, env->GetMethodID(env->GetObjectClass(trackStream), "read", "([BII)I"),
-                       tempBuf, 0, buf_size);
+    int retval = env->CallIntMethod(trackStream, readMethod, tempBuf, 0, buf_size);
     if (env->ExceptionCheck()) {
         env->ExceptionClear();
         return -1;
     }
 
     env->GetByteArrayRegion(tempBuf, 0, buf_size, (jbyte *) buf);
-    return retval == -1 ? 0 : retval;
+    return retval == -1 ? AVERROR_EOF : retval;
 }
 
 int64_t IOSeekFunc(void* data, int64_t pos, int whence) {
@@ -42,59 +52,58 @@ int64_t IOSeekFunc(void* data, int64_t pos, int whence) {
     javaVM->AttachCurrentThread((void **) &env, nullptr);
 
     int64_t retval = -1;
-    jclass clazz = env->GetObjectClass(trackStream);
 
-    jmethodID seekMethod;
-    jmethodID positionMethod;
+    jmethodID intlSeekMethod;
     switch (whence) {
         case SEEK_SET: {
-            if (!env->IsInstanceOf(trackStream, env->FindClass("charlie/laplacian/decoder/SeekableTrackStream"))) {
-                if (force) seekMethod = env->GetMethodID(clazz, "position", "()I");
+            if (!env->IsInstanceOf(trackStream, clazzSeekableStream)) {
+                if (force) intlSeekMethod = forceSeekMethod;
                 else return -1;
             } else {
-                seekMethod = env->GetMethodID(env->GetObjectClass(trackStream), "seek", "(I)V");
+                intlSeekMethod = seekMethod;
             }
-            env->CallVoidMethod(trackStream, seekMethod, pos);
+            env->CallVoidMethod(trackStream, intlSeekMethod, pos);
             CHECK_EXCEPTION;
-            retval = env->CallIntMethod(trackStream, env->GetMethodID(clazz, "position", "()I"));
+            retval = env->CallIntMethod(trackStream, positionMethod);
+            CHECK_EXCEPTION;
         }
             break;
         case SEEK_CUR: {
-            if (!env->IsInstanceOf(trackStream, env->FindClass("charlie/laplacian/decoder/SeekableTrackStream"))) {
-                if (force) seekMethod = env->GetMethodID(clazz, "position", "()I");
+            if (!env->IsInstanceOf(trackStream, clazzSeekableStream)) {
+                if (force) intlSeekMethod = forceSeekMethod;
                 else return -1;
             } else {
-                seekMethod = env->GetMethodID(env->GetObjectClass(trackStream), "seek", "(I)V");
+                intlSeekMethod = seekMethod;
             }
-            positionMethod = env->GetMethodID(clazz, "position", "()I");
             int64_t absPos = env->CallIntMethod(trackStream, positionMethod) + pos;
             CHECK_EXCEPTION;
-            env->CallVoidMethod(trackStream, seekMethod , absPos);
+            env->CallVoidMethod(trackStream, intlSeekMethod, absPos);
             CHECK_EXCEPTION;
             retval = env->CallIntMethod(trackStream, positionMethod);
+            CHECK_EXCEPTION;
         }
             break;
         case SEEK_END: {
-            if (!env->IsInstanceOf(trackStream, env->FindClass("charlie/laplacian/decoder/SeekableTrackStream"))) {
-                if (force) seekMethod = env->GetMethodID(clazz, "position", "()I");
+            if (!env->IsInstanceOf(trackStream, clazzSeekableStream)) {
+                if (force) intlSeekMethod = forceSeekMethod;
                 else return -1;
             } else {
-                seekMethod = env->GetMethodID(env->GetObjectClass(trackStream), "seek", "(I)V");
+                intlSeekMethod = seekMethod;
             }
-            if (!env->IsInstanceOf(trackStream, env->FindClass("charlie/laplacian/decoder/SizeKnownStream")))
+            if (!env->IsInstanceOf(trackStream, clazzSizeKnownStream))
                 return -1;
-            positionMethod = env->GetMethodID(clazz, "position", "()I");
-            int64_t absPos2 = env->CallIntMethod(trackStream, env->GetMethodID(clazz, "size", "()I")) - pos;
+            int64_t absPos2 = env->CallIntMethod(trackStream, sizeMethod) - pos;
             CHECK_EXCEPTION;
-            env->CallVoidMethod(trackStream, seekMethod, absPos2);
+            env->CallVoidMethod(trackStream, intlSeekMethod, absPos2);
             CHECK_EXCEPTION;
             retval = env->CallIntMethod(trackStream, positionMethod);
+            CHECK_EXCEPTION;
         }
             break;
         case AVSEEK_SIZE: {
-            if (!env->IsInstanceOf(trackStream, env->FindClass("charlie/laplacian/decoder/SizeKnownStream")))
+            if (!env->IsInstanceOf(trackStream, clazzSizeKnownStream))
                 return -1;
-            retval = env->CallIntMethod(trackStream, env->GetMethodID(clazz, "position", "()I"));
+            retval = env->CallIntMethod(trackStream, sizeMethod);
         }
             break;
         default:
@@ -106,7 +115,7 @@ int64_t IOSeekFunc(void* data, int64_t pos, int whence) {
 }
 
 AVIOContext *getIOContext(JNIEnv * env, jobject javaThis, jobject trackStream) {
-    byte *pBuffer = new byte[iBufSize];
+    byte *pBuffer = (byte *) av_malloc(iBufSize * sizeof(byte));
 	jobject globalTrackStream = env->NewGlobalRef(trackStream);
 	jobject *pStream = new jobject;
 	*pStream = globalTrackStream;
@@ -117,8 +126,31 @@ AVIOContext *getIOContext(JNIEnv * env, jobject javaThis, jobject trackStream) {
                                              nullptr, // Write disabled
                                              IOSeekFunc);
     if (!pIOCtx) return nullptr;
-    pIOCtx->seekable = env->IsInstanceOf(trackStream, env->FindClass("charlie/laplacian/decoder/SeekableTrackStream"));
+
+    pIOCtx->seekable = env->IsInstanceOf(trackStream, clazzSeekableStream);
     return pIOCtx;
+}
+
+void initClassesAndMethods(JNIEnv * env) {
+    if (!clazzTrackStream)
+        clazzTrackStream =
+                (jclass) env->NewGlobalRef(env->FindClass("charlie/laplacian/stream/TrackStream"));
+    if (!clazzSeekableStream)
+        clazzSeekableStream =
+                (jclass) env->NewGlobalRef(env->FindClass("charlie/laplacian/stream/SeekableTrackStream"));
+    if (!clazzSizeKnownStream)
+        clazzSizeKnownStream =
+                (jclass) env->NewGlobalRef(env->FindClass("charlie/laplacian/stream/SizeKnownTrackStream"));
+    if (!readMethod)
+        readMethod = env->GetMethodID(clazzTrackStream, "read", "([BII)I");
+    if (!seekMethod)
+        seekMethod = env->GetMethodID(clazzSeekableStream, "seek", "(I)V");
+    if (!forceSeekMethod)
+        forceSeekMethod = env->GetMethodID(clazzTrackStream, "forceSeek", "(I)V");
+    if (!positionMethod)
+        positionMethod = env->GetMethodID(clazzTrackStream, "position", "()I");
+    if (!sizeMethod)
+        sizeMethod = env->GetMethodID(clazzSizeKnownStream, "size", "()I");
 }
 
 #endif //LAPLACIAN_ESSENTIAL_FFMPEG_DECODER_CUSTOMIO_H
