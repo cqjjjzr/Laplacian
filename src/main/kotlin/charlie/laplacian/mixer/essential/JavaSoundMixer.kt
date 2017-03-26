@@ -1,8 +1,8 @@
 package charlie.laplacian.mixer.essential
 
-import charlie.laplacian.decoder.VolumeController
 import charlie.laplacian.mixer.AudioChannel
 import charlie.laplacian.mixer.Mixer
+import charlie.laplacian.mixer.VolumeController
 import javax.sound.sampled.*
 import javax.sound.sampled.FloatControl.Type.MASTER_GAIN
 
@@ -28,13 +28,18 @@ class JavaSoundChannel(audioFormat: AudioFormat) : AudioChannel {
     private val BUFFER_SIZE = 1024
     internal val dataLine: SourceDataLine
     private val dataLineInfo: DataLine.Info
-    private val volumeController: VolumeController
+    private var volumeController: JavaSoundVolumeController
 
     override fun mix(pcmData: ByteArray, offset: Int, length: Int) {
         dataLine.write(pcmData, offset, length)
     }
 
     override fun getVolumeController(): VolumeController = volumeController
+    override fun setVolumeController(volumeController: VolumeController) {
+        if (volumeController is JavaSoundVolumeController)
+            this.volumeController = volumeController
+        else throw ClassCastException()
+    }
 
     override fun open() {
         dataLine.start()

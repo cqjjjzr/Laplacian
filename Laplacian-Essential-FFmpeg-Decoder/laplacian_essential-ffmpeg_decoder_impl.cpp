@@ -40,9 +40,10 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_cl
     //TODO close
 
     AVFormatContext *pFormatCtx = getAVFormatContext(env, javaThis, env->GetObjectClass(javaThis));
-    delete pFormatCtx->pb->buffer;
-    av_free(pFormatCtx->pb);
+    AVIOContext *pIOCtx = pFormatCtx->pb;
     avformat_close_input(&pFormatCtx);
+    byte *pBuffer = pIOCtx->buffer;
+    delete pBuffer;
 }
 
 JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_playThread
@@ -56,6 +57,7 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pl
     jobject lockObject = env->GetObjectField(javaThis, env->GetFieldID(clazz, "pauseLock", "Ljava/util/concurrent/locks/Lock;"));
     jobject condObject = env->GetObjectField(javaThis, env->GetFieldID(clazz, "pauseCondition", "Ljava/util/concurrent/locks/Condition;"));
     jfieldID pausedField = env->GetFieldID(env->GetObjectClass(javaThis), "paused", "Z");
+    jfieldID closedField = env->GetFieldID(env->GetObjectClass(javaThis), "closed", "Z");
 
     AVFormatContext *pFormatCtx = getAVFormatContext(env, javaThis, clazz);
     AVCodecContext *pCodecCtx = getAVCodecContext(env, javaThis, clazz);
@@ -82,6 +84,7 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pl
     //jbyteArray jBuf = env->NewByteArray((MAX_AUDIO_FRAME_SIZE * 3) / 2);
     int audioStreamIndex = getAudioStreamIndex(env, clazz, javaThis);
     while (av_read_frame(pFormatCtx, &packet) >= 0) {
+        if (env->GetBooleanField(javaThis, closedField)) return;
         if (packet.stream_index == audioStreamIndex) {
             int ret = avcodec_send_packet(pCodecCtx, &packet);
             if (ret < 0 && ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
@@ -112,6 +115,8 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pl
             if (env->ExceptionCheck()) {
                 return;
             }
+
+            if (env->GetBooleanField(javaThis, closedField)) return;
             env->CallVoidMethod(javaThis, mixMethod, jBuf, 0, data_size);
             av_frame_free(&frame);
 
@@ -126,6 +131,8 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_pl
             env->CallVoidMethod(condObject, waitMethod);
             env->CallVoidMethod(lockObject, unlockMethod);
         }
+
+        if (env->GetBooleanField(javaThis, closedField)) return;
     }
 }
 

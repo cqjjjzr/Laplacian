@@ -2,9 +2,12 @@ package charlie.laplacian.decoder.essential
 
 import charlie.laplacian.decoder.Decoder
 import charlie.laplacian.decoder.DecoderFactory
+import charlie.laplacian.decoder.DecoderMetadata
 import charlie.laplacian.mixer.AudioChannel
 import charlie.laplacian.mixer.Mixer
+import charlie.laplacian.plugin.Plugin
 import charlie.laplacian.stream.TrackStream
+import charlie.laplacian.stream.essential.FileTrackStream
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
@@ -24,6 +27,8 @@ class FFmpegDecoder: Decoder {
 
     @Volatile
     private var paused: Boolean = true
+    @Volatile
+    private var closed: Boolean = false
     private var pointerAVCodecContext: Long = 0
     private var pointerAVFormatContext: Long = 0
 
@@ -40,6 +45,20 @@ class FFmpegDecoder: Decoder {
     private val numChannel: Int
     private val sampleRateHz: Float
     private val bitDepth: Int
+
+    private val thread =
+            thread (
+                start = false,
+                name = "FFmpegDecoder-PlayThread-" + hashCode(),
+                isDaemon = true) {
+                    try {
+                        playThread()
+                        if (!closed)
+                            close()
+                    } catch(ex: Exception) {
+                        ex.printStackTrace()
+                    }
+                }
 
     override fun play() {
         paused = false
@@ -62,6 +81,9 @@ class FFmpegDecoder: Decoder {
     override fun durationMillis(): Long = duration
 
     override fun close() {
+        closed = true
+        while (thread.isAlive)
+            Thread.sleep(1)
         closeInternal()
         mixer.closeChannel(audioChannel)
     }
@@ -107,28 +129,34 @@ class FFmpegDecoder: Decoder {
 
     private fun init(sampleRateHz: Float, bitDepth: Int, numChannel: Int) {
         startupNativeLibs(sampleRateHz, bitDepth, numChannel)
-        startupThread()
+        thread.start()
     }
 
-    private fun startupThread() {
-        thread (start = true,
-                name = "FFmpegDecoder-PlayThread-" + hashCode(),
-                isDaemon = true) {
-            try {
-                playThread()
-                close()
-            } catch(ex: Exception) {
-                ex.printStackTrace()
-            }
-        }
-    }
+    override fun getMetadata(): DecoderMetadata = FFmpegDecoderMetadata
 }
 
 class FFmpegDecoderFactory: DecoderFactory {
     override fun getDecoder(mixer: Mixer, sampleRateHz: Float, bitDepth: Int, numChannel: Int, stream: TrackStream): Decoder {
-        //if (stream is FileTrackStream)
-            //return FFmpegDecoder(mixer, sampleRateHz, bitDepth, numChannel, stream.getPath().toString())
+        if (stream is FileTrackStream)
+            return FFmpegDecoder(mixer, sampleRateHz, bitDepth, numChannel, stream.getPath().toString())
         // TODO Add more simple URLStream here
         return FFmpegDecoder(mixer, sampleRateHz, bitDepth, numChannel, stream)
+    }
+
+    override fun getMetadata(): DecoderMetadata = FFmpegDecoderMetadata
+
+    override fun hashCode(): Int = this.javaClass.name.hashCode()
+    override fun equals(other: Any?): Boolean = other is FFmpegDecoderFactory
+}
+
+object FFmpegDecoderMetadata: DecoderMetadata {
+    override fun getName(): String = "Essential.FFmpegDecoder"
+
+    override fun getVersion(): String = "rv1"
+
+    override fun getVersionID(): Int = 1
+
+    override fun getPlugin(): Plugin {
+        TODO("not implemented")
     }
 }

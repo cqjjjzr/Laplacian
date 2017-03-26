@@ -8,4 +8,6 @@ interface Decoder {
     fun durationMillis(): Long
 
     fun close()
+
+    fun getMetadata(): DecoderMetadata
 }

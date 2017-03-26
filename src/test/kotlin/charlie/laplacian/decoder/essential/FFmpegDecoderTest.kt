@@ -38,9 +38,8 @@ class FFmpegDecoderTest {
                         FileTrackSourceInfo(
                                 File("E:\\iTunes\\iTunes Media\\Music\\Yonder Voice\\雪幻ティルナノーグ\\01 雪幻ティルナノーグ.m4a")))).apply {
             play()
-            synchronized(this) {
-                (this as Object).wait()
-            }
+            Thread.sleep(10000)
+            close()
         }
     }
 }

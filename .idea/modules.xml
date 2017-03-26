@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Laplacian.iml" filepath="$PROJECT_DIR$/Laplacian.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Laplacian.iml" filepath="$PROJECT_DIR$/.idea/modules/Laplacian.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Laplacian_main.iml" filepath="$PROJECT_DIR$/.idea/modules/Laplacian_main.iml" group="Laplacian" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Laplacian_test.iml" filepath="$PROJECT_DIR$/.idea/modules/Laplacian_test.iml" group="Laplacian" />
     </modules>
   </component>
 </project>
