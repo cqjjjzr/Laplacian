@@ -6,6 +6,7 @@ import charlie.laplacian.decoder.essential.FFmpegDecoder
 import charlie.laplacian.decoder.essential.FFmpegDecoderFactory
 import charlie.laplacian.plugin.Plugin
 import charlie.laplacian.plugin.PluginMetadata
+import java.awt.Image
 
 class Essential: Plugin {
     private val ffmpegDecoderFactory = FFmpegDecoderFactory()
@@ -14,11 +15,8 @@ class Essential: Plugin {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun globalInit() {
-        FFmpegDecoder.init()
-    }
-
     override fun init() {
+        FFmpegDecoder.init()
         DecoderRegistry.registerDecoderFactory(ffmpegDecoderFactory)
     }
 
@@ -36,5 +34,10 @@ class Essential: Plugin {
         override fun getVersionID(): Int = 1
 
         override fun getAuthor(): String = "Charlie Jiang"
+
+        override fun getIcon(): Image? {
+            // TODO ICON
+            return null
+        }
     }
 }

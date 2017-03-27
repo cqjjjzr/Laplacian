@@ -5,6 +5,7 @@
     <option name="excludedDirectories">
       <list>
         <option value="$PROJECT_DIR$/Laplacian-Essential-FFmpeg-Decoder/cmake-build-debug" />
+        <option value="$PROJECT_DIR$/.idea" />
       </list>
     </option>
   </component>

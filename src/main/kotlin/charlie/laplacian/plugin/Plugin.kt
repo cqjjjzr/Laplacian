@@ -1,9 +1,10 @@
 package charlie.laplacian.plugin
 
+import java.awt.Image
+
 interface Plugin {
     fun getMetadata(): PluginMetadata
 
-    fun globalInit()
     fun init()
     fun destroy()
 }
@@ -16,4 +17,5 @@ interface PluginMetadata {
     fun getVersionID(): Int
 
     fun getAuthor(): String
+    fun getIcon(): Image?
 }
