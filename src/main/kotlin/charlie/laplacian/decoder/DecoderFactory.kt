@@ -1,10 +1,11 @@
 package charlie.laplacian.decoder
 
-import charlie.laplacian.mixer.Mixer
+import charlie.laplacian.output.OutputDevice
+import charlie.laplacian.output.OutputSettings
 import charlie.laplacian.stream.TrackStream
 
 interface DecoderFactory {
-    fun getDecoder(mixer: Mixer, sampleRateHz: Float, bitDepth: Int, numChannel: Int, stream: TrackStream): Decoder
+    fun getDecoder(mixer: OutputDevice, outputSettings: OutputSettings, stream: TrackStream): Decoder
 
     fun getMetadata(): DecoderMetadata
 }

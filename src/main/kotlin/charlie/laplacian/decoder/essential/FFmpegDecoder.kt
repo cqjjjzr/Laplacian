@@ -3,8 +3,9 @@ package charlie.laplacian.decoder.essential
 import charlie.laplacian.decoder.Decoder
 import charlie.laplacian.decoder.DecoderFactory
 import charlie.laplacian.decoder.DecoderMetadata
-import charlie.laplacian.mixer.AudioChannel
-import charlie.laplacian.mixer.Mixer
+import charlie.laplacian.output.OutputDevice
+import charlie.laplacian.output.OutputLine
+import charlie.laplacian.output.OutputSettings
 import charlie.laplacian.plugin.Plugin
 import charlie.laplacian.stream.TrackStream
 import charlie.laplacian.stream.essential.FileTrackStream
@@ -23,7 +24,7 @@ class FFmpegDecoder: Decoder {
         }
     }
 
-    private var audioChannel: AudioChannel
+    private var audioChannel: OutputLine
 
     @Volatile
     private var paused: Boolean = true
@@ -41,7 +42,7 @@ class FFmpegDecoder: Decoder {
     private var pauseLock: Lock = ReentrantLock(true)
     private val pauseCondition: Condition = pauseLock.newCondition()
 
-    private val mixer: Mixer
+    private val mixer: OutputDevice
     private val numChannel: Int
     private val sampleRateHz: Float
     private val bitDepth: Int
@@ -85,7 +86,7 @@ class FFmpegDecoder: Decoder {
         while (thread.isAlive)
             Thread.sleep(1)
         closeInternal()
-        mixer.closeChannel(audioChannel)
+        mixer.closeLine(audioChannel)
     }
 
     external fun closeInternal()
@@ -102,33 +103,32 @@ class FFmpegDecoder: Decoder {
         audioChannel.mix(pcmData, offset, length)
     }
 
-    private constructor(mixer: Mixer,
-                        sampleRateHz: Float,
-                        bitDepth: Int,
-                        numChannel: Int) {
+    private constructor(mixer: OutputDevice, outputSettings: OutputSettings) {
         this.mixer = mixer
-        this.sampleRateHz = sampleRateHz
-        this.bitDepth = bitDepth
-        this.numChannel = numChannel
+        this.sampleRateHz = outputSettings.sampleRateHz
+        this.bitDepth = outputSettings.bitDepth
+        this.numChannel = outputSettings.numChannels
         if (bitDepth != 32 && bitDepth != 16 && bitDepth != 64)
             throw IllegalArgumentException("bit depth must be 32, 64 or 16")
-        audioChannel = mixer.openChannel()
+        audioChannel = mixer.openLine()
     }
 
-    constructor(mixer: Mixer, sampleRateHz: Float, bitDepth: Int, numChannel: Int, stream: TrackStream)
-            : this(mixer, sampleRateHz, bitDepth, numChannel) {
+    constructor(mixer: OutputDevice, outputSettings: OutputSettings, stream: TrackStream)
+            : this(mixer, outputSettings) {
         initWithStream(stream)
-        init(sampleRateHz, bitDepth, numChannel)
+        init(outputSettings)
     }
 
-    constructor(mixer: Mixer, sampleRateHz: Float, bitDepth: Int, numChannel: Int, url: String)
-            : this(mixer, sampleRateHz, bitDepth, numChannel) {
+    constructor(mixer: OutputDevice, outputSettings: OutputSettings, url: String)
+            : this(mixer, outputSettings) {
         initWithURL(url)
-        init(sampleRateHz, bitDepth, numChannel)
+        init(outputSettings)
     }
 
-    private fun init(sampleRateHz: Float, bitDepth: Int, numChannel: Int) {
-        startupNativeLibs(sampleRateHz, bitDepth, numChannel)
+    private fun init(outputSettings: OutputSettings) {
+        outputSettings.apply {
+            startupNativeLibs(sampleRateHz, bitDepth, numChannel)
+        }
         thread.start()
     }
 
@@ -136,11 +136,11 @@ class FFmpegDecoder: Decoder {
 }
 
 class FFmpegDecoderFactory: DecoderFactory {
-    override fun getDecoder(mixer: Mixer, sampleRateHz: Float, bitDepth: Int, numChannel: Int, stream: TrackStream): Decoder {
+    override fun getDecoder(mixer: OutputDevice, outputSettings: OutputSettings, stream: TrackStream): Decoder {
         if (stream is FileTrackStream)
-            return FFmpegDecoder(mixer, sampleRateHz, bitDepth, numChannel, stream.getPath().toString())
+            return FFmpegDecoder(mixer, outputSettings, stream.getPath().toString())
         // TODO Add more simple URLStream here
-        return FFmpegDecoder(mixer, sampleRateHz, bitDepth, numChannel, stream)
+        return FFmpegDecoder(mixer, outputSettings, stream)
     }
 
     override fun getMetadata(): DecoderMetadata = FFmpegDecoderMetadata

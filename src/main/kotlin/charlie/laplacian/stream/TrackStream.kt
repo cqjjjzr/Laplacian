@@ -6,3 +6,11 @@ interface TrackStream {
     fun close()
     fun forceSeek(positionBytes: Int)
 }
+
+interface SizeKnownTrackStream: TrackStream {
+    fun size(): Int
+}
+
+interface SeekableTrackStream: TrackStream {
+    fun seek(positionBytes: Int)
+}

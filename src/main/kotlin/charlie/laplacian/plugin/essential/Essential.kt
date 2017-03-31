@@ -1,7 +1,7 @@
 package charlie.laplacian.plugin.essential
 
 import charlie.laplacian.I18n
-import charlie.laplacian.decoder.essential.DecoderRegistry
+import charlie.laplacian.decoder.DecoderRegistry
 import charlie.laplacian.decoder.essential.FFmpegDecoder
 import charlie.laplacian.decoder.essential.FFmpegDecoderFactory
 import charlie.laplacian.plugin.Plugin

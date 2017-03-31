@@ -1,6 +1,7 @@
 package charlie.laplacian.decoder.essential
 
-import charlie.laplacian.mixer.essential.JavaSoundMixer
+import charlie.laplacian.output.OutputSettings
+import charlie.laplacian.output.essential.JavaSoundOutputMethod
 import charlie.laplacian.source.essential.FileSource
 import charlie.laplacian.source.essential.FileTrackSourceInfo
 import org.junit.Test
@@ -16,7 +17,7 @@ class FFmpegDecoderTest {
         AudioSystem.getMixerInfo().forEach {
             println("info: " + it)
             AudioSystem.getMixer(it).apply {
-                println("mixer " + this)
+                println("output " + this)
                 sourceLineInfo.forEach {
                     println("    info: " + it)
                     AudioSystem.getLine(it).apply {
@@ -31,15 +32,16 @@ class FFmpegDecoderTest {
             println()
         }
         FFmpegDecoder.init()
-        FFmpegDecoderFactory()
-                .getDecoder(JavaSoundMixer().apply {
-                    init(44100f, 16, 2)
-                }, 44100f, 16, 2, FileSource().streamFrom(
-                        FileTrackSourceInfo(
-                                File("E:\\iTunes\\iTunes Media\\Music\\Yonder Voice\\雪幻ティルナノーグ\\01 雪幻ティルナノーグ.m4a")))).apply {
-            play()
-            Thread.sleep(10000)
-            close()
+        OutputSettings(44100f, 16, 2).apply {
+            FFmpegDecoderFactory()
+                    .getDecoder(JavaSoundOutputMethod().openDevice(this), this, FileSource().streamFrom(
+                            FileTrackSourceInfo(
+                                    File("E:\\iTunes\\iTunes Media\\Music\\Yonder Voice\\雪幻ティルナノーグ\\01 雪幻ティルナノーグ.m4a")))).apply {
+                play()
+                Thread.sleep(10000)
+                close()
+            }
         }
+
     }
 }

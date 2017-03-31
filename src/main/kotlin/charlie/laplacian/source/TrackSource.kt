@@ -7,3 +7,6 @@ interface TrackSource {
     fun getDescription(): String
     fun streamFrom(source: TrackSourceInfo): TrackStream
 }
+
+interface LocalTrackSource: TrackSource
+interface RemoteTrackSource: TrackSource

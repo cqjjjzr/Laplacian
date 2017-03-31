@@ -1,10 +1,7 @@
-package charlie.laplacian.decoder.essential
+package charlie.laplacian.decoder
 
-import charlie.laplacian.decoder.Decoder
-import charlie.laplacian.decoder.DecoderException
-import charlie.laplacian.decoder.DecoderFactory
-import charlie.laplacian.decoder.DecoderMetadata
-import charlie.laplacian.mixer.Mixer
+import charlie.laplacian.output.OutputDevice
+import charlie.laplacian.output.OutputSettings
 import charlie.laplacian.stream.TrackStream
 import java.util.*
 
@@ -20,9 +17,7 @@ object DecoderRegistry {
         decoderFactories -= factory
     }
 
-    fun getMetadatas(): Array<DecoderMetadata> {
-        return Array(decoderFactories.size, { decoderFactories[it].getMetadata() })
-    }
+    fun getMetadatas(): Array<DecoderMetadata> = Array(decoderFactories.size, { decoderFactories[it].getMetadata() })
 
     fun moveUp(index: Int) {
         if (index == 0 || decoderFactories.size <= 1) throw IllegalArgumentException()
@@ -40,14 +35,18 @@ object DecoderRegistry {
         }
     }
 
-    fun tryDecode(mixer: Mixer, sampleRateHz: Float, bitDepth: Int, numChannel: Int, stream: TrackStream): Decoder {
+    fun tryDecode(mixer: OutputDevice, outputSettings: OutputSettings, stream: TrackStream): Decoder {
+        var e: Throwable? = null
         decoderFactories.forEach {
             try {
-                return it.getDecoder(mixer, sampleRateHz, bitDepth, numChannel, stream)
+                return it.getDecoder(mixer, outputSettings, stream)
             } catch (ex: Exception) {
-
+                e = ex
             }
         }
-        throw DecoderException()
+        if (e == null)
+            throw DecoderException()
+        else
+            throw DecoderException(e)
     }
 }

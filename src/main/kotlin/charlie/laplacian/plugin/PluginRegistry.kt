@@ -18,7 +18,7 @@ import java.util.*
 
 object PluginRegistry {
     private val logger: Logger = LogManager.getLogger("laplacian.pluginRegistry")
-    private val plugins: MutableMap<ClassLoader, Plugin> = LinkedHashMap()
+    private val plugins: MutableMap<ClassLoader, Any> = LinkedHashMap()
 
     private fun loadPluginList() {
         logger.infoI18n("pluginRegistry.enterLoad")

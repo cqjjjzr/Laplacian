@@ -1,4 +1,4 @@
-package charlie.laplacian.mixer
+package charlie.laplacian.output
 
 interface VolumeController {
     fun max(): Float

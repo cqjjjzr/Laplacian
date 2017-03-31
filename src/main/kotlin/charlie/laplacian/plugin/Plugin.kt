@@ -1,21 +1,11 @@
 package charlie.laplacian.plugin
 
-import java.awt.Image
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Plugin(val name: String,
+                        val descriptor: String = "",
 
-interface Plugin {
-    fun getMetadata(): PluginMetadata
+                        val version: String,
+                        val versionID: String,
 
-    fun init()
-    fun destroy()
-}
-
-interface PluginMetadata {
-    fun getName(): String
-    fun getDescriptor(): String
-
-    fun getVersion(): String
-    fun getVersionID(): Int
-
-    fun getAuthor(): String
-    fun getIcon(): Image?
-}
+                        val author: String = "")
