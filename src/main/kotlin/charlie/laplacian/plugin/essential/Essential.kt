@@ -1,30 +1,22 @@
 package charlie.laplacian.plugin.essential
 
-import charlie.laplacian.I18n
 import charlie.laplacian.decoder.DecoderRegistry
 import charlie.laplacian.decoder.essential.FFmpegDecoder
 import charlie.laplacian.decoder.essential.FFmpegDecoderFactory
-import charlie.laplacian.plugin.Plugin
-import charlie.laplacian.plugin.PluginMetadata
-import java.awt.Image
 
-class Essential: Plugin {
+class Essential {
     private val ffmpegDecoderFactory = FFmpegDecoderFactory()
 
-    override fun getMetadata(): PluginMetadata {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun init() {
+    fun init() {
         FFmpegDecoder.init()
         DecoderRegistry.registerDecoderFactory(ffmpegDecoderFactory)
     }
 
-    override fun destroy() {
+    fun destroy() {
         DecoderRegistry.unregisterDecoderFactory(ffmpegDecoderFactory)
     }
 
-    class EssentialMetadata: PluginMetadata {
+    /*class EssentialMetadata: PluginMetadata {
         override fun getName(): String = "Essential"
 
         override fun getDescriptor(): String = I18n.getString("plugin.essential.descriptor")
@@ -39,5 +31,5 @@ class Essential: Plugin {
             // TODO ICON
             return null
         }
-    }
+    }*/
 }

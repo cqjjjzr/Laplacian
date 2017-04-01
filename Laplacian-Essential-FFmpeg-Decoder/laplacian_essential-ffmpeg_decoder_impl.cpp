@@ -15,6 +15,7 @@ extern "C" {
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
 #include <libswresample/swresample.h>
+#include <libavutil/log.h>
 }
 
 static const int MAX_AUDIO_FRAME_SIZE = 192000;
@@ -223,11 +224,30 @@ JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_st
                       getAVFormatContext(env, javaThis, clazz)->duration / 1000);
 }
 
+jmethodID methodLogGlobally = nullptr;
+jclass clazz = nullptr;
+
+void laplacianLogCallback(void* ptr, int level, const char* fmt, va_list vl) {
+    char *buf = new char[100];
+    vsprintf(buf, fmt, vl);
+
+    JNIEnv *env = nullptr;
+    javaVM->GetEnv((void **) &env, javaVMVersion);
+
+    env->CallStaticVoidMethod(clazz, methodLogGlobally, env->NewStringUTF(buf), level);
+
+    delete buf;
+}
+
 JNIEXPORT void JNICALL Java_charlie_laplacian_decoder_essential_FFmpegDecoder_globalInit
         (JNIEnv * env, jclass javaClass) {
     av_register_all();
     env->GetJavaVM(&javaVM);
     javaVMVersion = env->GetVersion();
+    methodLogGlobally = env->GetStaticMethodID(javaClass, "writeLog", "(Ljava/lang/String;I)V");
+    clazz = (jclass) env->NewGlobalRef(env->GetObjectClass(javaClass));
     initClassesAndMethods(env);
+
+    av_log_set_callback(laplacianLogCallback);
 }
 }

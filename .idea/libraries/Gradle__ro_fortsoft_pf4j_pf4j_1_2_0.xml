@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: ro.fortsoft.pf4j:pf4j:1.2.0">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/ro.fortsoft.pf4j/pf4j/1.2.0/5822c489445781f6bf4e3df2051ffc1b37386908/pf4j-1.2.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/ro.fortsoft.pf4j/pf4j/1.2.0/43aa254601334e8d0f8b50179e6251df148721b9/pf4j-1.2.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

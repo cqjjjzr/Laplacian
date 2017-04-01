@@ -9,6 +9,9 @@ import charlie.laplacian.output.OutputSettings
 import charlie.laplacian.plugin.Plugin
 import charlie.laplacian.stream.TrackStream
 import charlie.laplacian.stream.essential.FileTrackStream
+import org.apache.logging.log4j.Level
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
@@ -16,8 +19,23 @@ import kotlin.concurrent.thread
 
 class FFmpegDecoder: Decoder {
     companion object {
+        private val logger: Logger = LogManager.getLogger("decoder")
         @JvmStatic
         private external fun globalInit()
+        @JvmStatic
+        private fun writeLog(message: String, levelID: Int) {
+            logger.log(
+                    when(levelID) { // SEE FFmpeg libavutil/log.h
+                        -8 -> Level.TRACE
+                        0, 8 -> Level.FATAL
+                        16 -> Level.ERROR
+                        24 -> Level.WARN
+                        32 -> Level.INFO
+                        40, 48 -> Level.DEBUG
+                        56 -> Level.TRACE
+                        else -> Level.TRACE
+                    }, message)
+        }
         fun init() {
             System.loadLibrary("libFFmpegDecoder")
             globalInit()

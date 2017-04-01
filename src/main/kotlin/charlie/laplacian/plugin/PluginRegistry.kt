@@ -1,21 +1,6 @@
 package charlie.laplacian.plugin
 
-import charlie.laplacian.I18n
-import charlie.laplacian.logging.infoI18n
-import charlie.laplacian.logging.logException
-import charlie.laplacian.logging.warnFormatI18n
-import org.apache.logging.log4j.Level
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
-import java.io.File
-import java.net.URLClassLoader
-import java.nio.file.FileVisitResult
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.SimpleFileVisitor
-import java.nio.file.attribute.BasicFileAttributes
-import java.util.*
-
+/*
 object PluginRegistry {
     private val logger: Logger = LogManager.getLogger("laplacian.pluginRegistry")
     private val plugins: MutableMap<ClassLoader, Any> = LinkedHashMap()
@@ -89,4 +74,4 @@ object PluginRegistry {
         }
         plugins.clear()
     }
-}
+}*/
