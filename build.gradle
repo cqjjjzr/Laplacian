@@ -4,7 +4,6 @@ plugins {
 }
 
 subprojects {
-	
 	group = 'com.github.cqjjjzr'
 	version = '1.0-SNAPSHOT'
 	

@@ -3,6 +3,10 @@ plugins {
 }
 apply plugin: 'org.jetbrains.kotlin.jvm'
 
+repositories {
+	mavenCentral()
+}
+
 dependencies {
     compile project(":Laplacian.Framework")
 }
