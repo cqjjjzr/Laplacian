@@ -5,11 +5,11 @@ import java.util.*
 object OutputMethodRegistry {
     private val mixers: MutableList<OutputMethod> = LinkedList()
 
-    fun registerMixer(outputMethod: OutputMethod) {
+    fun registerOutputMethod(outputMethod: OutputMethod) {
         mixers += outputMethod
     }
 
-    fun unregisterMixer(outputMethod: OutputMethod){
+    fun unregisterOutputMethod(outputMethod: OutputMethod){
         mixers -= outputMethod
     }
 

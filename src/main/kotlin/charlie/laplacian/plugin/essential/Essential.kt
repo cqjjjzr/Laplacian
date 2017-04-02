@@ -1,35 +1,23 @@
 package charlie.laplacian.plugin.essential
 
 import charlie.laplacian.decoder.DecoderRegistry
-import charlie.laplacian.decoder.essential.FFmpegDecoder
 import charlie.laplacian.decoder.essential.FFmpegDecoderFactory
+import charlie.laplacian.output.OutputMethodRegistry
+import charlie.laplacian.output.essential.JavaSoundOutputMethod
+import ro.fortsoft.pf4j.Plugin
+import ro.fortsoft.pf4j.PluginWrapper
 
-class Essential {
-    private val ffmpegDecoderFactory = FFmpegDecoderFactory()
+class Essential(wrapper: PluginWrapper?) : Plugin(wrapper) {
+    private val decoderFactory = FFmpegDecoderFactory()
+    private val outputMethod = JavaSoundOutputMethod()
 
-    fun init() {
-        FFmpegDecoder.init()
-        DecoderRegistry.registerDecoderFactory(ffmpegDecoderFactory)
+    override fun start() {
+        DecoderRegistry.registerDecoderFactory(decoderFactory)
+        OutputMethodRegistry.registerOutputMethod(outputMethod)
     }
 
-    fun destroy() {
-        DecoderRegistry.unregisterDecoderFactory(ffmpegDecoderFactory)
+    override fun stop() {
+        DecoderRegistry.unregisterDecoderFactory(decoderFactory)
+        OutputMethodRegistry.unregisterOutputMethod(outputMethod)
     }
-
-    /*class EssentialMetadata: PluginMetadata {
-        override fun getName(): String = "Essential"
-
-        override fun getDescriptor(): String = I18n.getString("plugin.essential.descriptor")
-
-        override fun getVersion(): String = "rv1"
-
-        override fun getVersionID(): Int = 1
-
-        override fun getAuthor(): String = "Charlie Jiang"
-
-        override fun getIcon(): Image? {
-            // TODO ICON
-            return null
-        }
-    }*/
 }

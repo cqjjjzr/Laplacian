@@ -4,7 +4,6 @@ import charlie.laplacian.output.OutputSettings
 import charlie.laplacian.output.essential.JavaSoundOutputMethod
 import charlie.laplacian.source.essential.FileSource
 import charlie.laplacian.source.essential.FileTrackSourceInfo
-import org.junit.Ignore
 import org.junit.Test
 import java.io.File
 import javax.sound.sampled.AudioSystem
@@ -45,7 +44,7 @@ class FFmpegDecoderTest {
         }
     }
 
-    @Ignore
+    @Test
     fun mixerInfo() {
         JavaSoundOutputMethod().getDeviceInfos().forEach {
             println(it.getName())
