@@ -13,4 +13,6 @@ hs_err_pid*
 
 *.dll
 *.zip
-*.txt
+*.a
+
+cmake-build-*
