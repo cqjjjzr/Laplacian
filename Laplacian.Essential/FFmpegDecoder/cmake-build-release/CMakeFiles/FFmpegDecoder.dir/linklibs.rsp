@@ -1,0 +1,1 @@
+ -LD:/ffmpeg-20170315-6c4665d-win64-dev/ffmpeg-20170315-6c4665d-win64-dev/lib -lavcodec -lavformat -lavdevice -lavfilter -lavutil -lpostproc -lswresample -llibswscale -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 

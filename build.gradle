@@ -1,12 +1,21 @@
 plugins {
-    id "org.jetbrains.kotlin.jvm" version "1.1.1"
-    id "java"
+		id "org.jetbrains.kotlin.jvm" version "1.1.1"
+		id "java"
 }
 
-group = 'com.github.cqjjjzr'
-version = '1.0-SNAPSHOT'
+subprojects {
+	
+	group = 'com.github.cqjjjzr'
+	version = '1.0-SNAPSHOT'
+	
+	sourceCompatibility = 1.8
+    targetCompatibility = 1.8
 
-description = """Laplacian"""
+	tasks.withType(JavaCompile) {
+		options.encoding = 'UTF-8'
+	}
+}
+
 ext.kotlin_version = '1.1.1'
 
 sourceCompatibility = 1.8
@@ -15,34 +24,24 @@ tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
 }
 
-sourceSets {
-    main.java.srcDirs = ['src/main/java']
-    main.kotlin.srcDirs = ['src/main/kotlin']
-    main.resources.srcDirs = ['src/main/resources']
-
-    test.java.srcDirs = ['src/test/java']
-    test.kotlin.srcDirs = ['src/test/kotlin']
-    test.resources.srcDirs = ['src/test/resources']
-}
-
-
 repositories {
-    mavenCentral()
+		mavenCentral()
 }
+
 dependencies {
-    // Kotlin libs
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version:'1.1.1'
-    compile group: 'org.jetbrains', name: 'annotations', version:'LATEST'
+		// Kotlin libs
+		compile(group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version:'1.1.1')
+		compile group: 'org.jetbrains', name: 'annotations', version:'LATEST'
     
-    // Project dependencies
-    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version:'2.8.1'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version:'2.8.1'
-    compile group: 'org.apache.commons', name: 'commons-configuration2', version: '2.1.1'
+		// Project dependencies
+		compile group: 'org.apache.logging.log4j', name: 'log4j-api', version:'2.8.1'
+		compile group: 'org.apache.logging.log4j', name: 'log4j-core', version:'2.8.1'
+		compile group: 'org.apache.commons', name: 'commons-configuration2', version: '2.1.1'
 
-    compile group: 'ro.fortsoft.pf4j', name: 'pf4j', version: '1.2.0'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.8.1'
+		compile group: 'ro.fortsoft.pf4j', name: 'pf4j', version: '1.2.0'
+		compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.8.1'
 
-    //Test libs
-    testCompile group: 'org.jetbrains.kotlin', name: 'kotlin-test-junit', version:'1.1.0'
-    testCompile group: 'junit', name: 'junit', version:'4.12'
+		//Test libs
+		testCompile group: 'org.jetbrains.kotlin', name: 'kotlin-test-junit', version:'1.1.0'
+		testCompile group: 'junit', name: 'junit', version:'4.12'
 }
