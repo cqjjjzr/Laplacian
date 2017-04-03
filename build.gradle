@@ -1,18 +1,29 @@
-plugins {
-		id "org.jetbrains.kotlin.jvm" version "1.1.1"
-		id "java"
+buildscript {
+	ext.kotlin_version = '1.1.1'
+
+	repositories {
+		mavenCentral()
+	}
+
+	dependencies {
+		classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+	}
 }
 
-subprojects {
-	group = 'com.github.cqjjjzr'
-	version = '1.0-SNAPSHOT'
-	
-	sourceCompatibility = 1.8
-    targetCompatibility = 1.8
+plugins {
+		//id "org.jetbrains.kotlin.jvm" version "1.1.1"
+		id "java"
+}
+apply plugin: "kotlin"
 
-	tasks.withType(JavaCompile) {
-		options.encoding = 'UTF-8'
-	}
+group = 'com.github.cqjjjzr'
+version = '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
 }
 
 ext.kotlin_version = '1.1.1'

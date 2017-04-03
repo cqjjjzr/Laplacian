@@ -1,7 +1,17 @@
 plugins {
 		id "java"
 }
-apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'kotlin'
+
+group = 'com.github.cqjjjzr'
+version = '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
 
 repositories {
     mavenCentral()

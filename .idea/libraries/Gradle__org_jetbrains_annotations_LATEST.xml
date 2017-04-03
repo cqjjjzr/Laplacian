@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Gradle: org.jetbrains:annotations:LATEST">
-    <CLASSES>
-      <root url="file://$PROJECT_DIR$/Cannot resolve external dependency org.jetbrains:annotations:LATEST because no repositories are defined." />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
