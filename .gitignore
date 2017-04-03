@@ -15,4 +15,12 @@ hs_err_pid*
 *.zip
 *.a
 
-cmake-build-*
+out
+CMakeFiles
+CMakeCache.txt
+.idea
+*.cmake
+Makefile
+*.cbp
+build
+.gradle
