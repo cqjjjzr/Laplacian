@@ -1,3 +1,4 @@
 rootProject.name = 'Laplacian'
 include 'Laplacian.Essential'
 include 'Laplacian.Framework'
+include 'Laplacian.Launcher'

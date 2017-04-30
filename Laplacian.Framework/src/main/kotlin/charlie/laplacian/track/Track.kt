@@ -22,7 +22,7 @@ class Track(val uuid: UUID, val sourceInfo: TrackSourceInfo,
         if (!property.getApplicableFor().contains(PropertyApplicableType.TRACK))
             throw IllegalArgumentException("not applicable to track!")
         if (!property.canDuplicate())
-            if (properties.filter { it.javaClass.isAssignableFrom(property.javaClass) }.isNotEmpty())
+            if (properties.find { it.javaClass.isAssignableFrom(property.javaClass) } != null)
                 throw IllegalArgumentException("property can't be duplicate!")
         properties += property
     }

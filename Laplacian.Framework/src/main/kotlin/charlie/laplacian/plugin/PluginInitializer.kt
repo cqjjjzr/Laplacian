@@ -8,7 +8,7 @@ object PluginInitializer {
     private val FILE_PATH = "plugins/"
     private val pluginManager: PluginManager = DefaultPluginManager(Paths.get(FILE_PATH))
 
-    init {
+    fun load() {
         pluginManager.loadPlugins()
         pluginManager.startPlugins()
     }

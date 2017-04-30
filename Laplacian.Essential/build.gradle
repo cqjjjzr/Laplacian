@@ -40,3 +40,13 @@ task buildNativeLibs(type: Exec) {
 
 buildNativeLibs.dependsOn initNativeLibs
 build.dependsOn buildNativeLibs
+
+jar {
+	manifest {
+		attributes 'Plugin-Class': 'charlie.laplacian.plugin.essential.Essential',
+				'Plugin-Version': '1.0.0',
+				'Plugin-Provider': 'Charlie Jiang',
+				'Plugin-Id': 'laplacian_essential'
+
+	}
+}

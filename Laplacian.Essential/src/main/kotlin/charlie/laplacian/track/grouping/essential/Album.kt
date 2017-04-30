@@ -17,7 +17,7 @@ class Album: TrackGroupingMethod {
     override fun getProperties(): List<Property> = Collections.unmodifiableList(properties)
 
     override fun addTrack(track: Track) {
-        if (tracks.filter { it == track }.isNotEmpty())
+        if (tracks.find { it == track } != null)
             throw IllegalArgumentException("duplicate track")
         tracks += track
     }

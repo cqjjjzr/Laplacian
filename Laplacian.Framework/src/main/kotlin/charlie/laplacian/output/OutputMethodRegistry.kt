@@ -1,6 +1,7 @@
 package charlie.laplacian.output
 
 import java.util.*
+import kotlin.NoSuchElementException
 
 object OutputMethodRegistry {
     private val mixers: MutableList<OutputMethod> = LinkedList()
@@ -16,6 +17,6 @@ object OutputMethodRegistry {
     fun getMetadatas(): Array<OutputMethodMetadata> = Array(mixers.size, { mixers[it].getMetadata() })
 
     fun getOutputMethod(methodClassName: String): OutputMethod {
-        return mixers.filter { it.javaClass.name == methodClassName }.first()
+        return mixers.find { it.javaClass.name == methodClassName } ?: throw NoSuchElementException(methodClassName)
     }
 }

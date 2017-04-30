@@ -2,6 +2,7 @@ package charlie.laplacian.source
 
 import charlie.laplacian.stream.TrackStream
 import java.util.*
+import kotlin.NoSuchElementException
 
 object SourceRegistry {
     private val sources: MutableList<TrackSource> = LinkedList()
@@ -17,6 +18,7 @@ object SourceRegistry {
     fun getMetadatas(): Array<TrackSourceMetadata> = Array(sources.size) { sources[it].getMetadata() }
 
     fun getStream(info: TrackSourceInfo): TrackStream =
-            sources.filter { it.getMetadata().getSupportedTrackInfos().contains(info.javaClass) }
-                    .first().streamFrom(info)
+            (sources.find { it.getMetadata().getSupportedTrackInfos().contains(info.javaClass) }
+                    ?: throw NoSuchElementException(info.toString()))
+                    .streamFrom(info)
 }
