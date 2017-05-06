@@ -1,7 +1,7 @@
 package charlie.laplacian.launcher
 
 import charlie.laplacian.config.Configuration
-import charlie.laplacian.gui.GUIRegistery
+import charlie.laplacian.gui.essential.GUIRegistery
 import charlie.laplacian.plugin.PluginInitializer
 
 fun main(args: Array<String>) {
