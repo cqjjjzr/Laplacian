@@ -20,6 +20,4 @@ class EqualsProperty(private var value: UUID): Property() {
     override fun getType(): PropertyType = PropertyType.REFERENCE
 
     override fun getApplicableFor(): Set<PropertyApplicableType> = TRACK_ONLY
-
-    override fun canDuplicate(): Boolean = true
 }

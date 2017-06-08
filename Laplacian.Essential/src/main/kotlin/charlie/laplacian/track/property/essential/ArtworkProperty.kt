@@ -7,23 +7,25 @@ import charlie.laplacian.track.property.PropertyType
 import java.awt.Image
 
 class ArtworkProperty(private var name: String,
-                      private var artwork: Image): Property() {
+                      private var artworks: MutableList<Artwork>): Property() {
     override fun getName(): String = name
 
     fun setName(name: String) {
         this.name = name
     }
 
-    override fun getValue(): Any = artwork
+    override fun getValue(): Any = artworks
 
+    @Suppress("unchecked_cast")
     override fun setValue(value: Any) {
-        if (value !is Image) throw ClassCastException()
-        this.artwork = value
+        if (value !is MutableList<*>) throw ClassCastException()
+        this.artworks = value as MutableList<Artwork>
     }
 
-    override fun getType(): PropertyType = PropertyType.IMAGE
+    override fun getType(): PropertyType = PropertyType.LIST
 
     override fun getApplicableFor(): Set<PropertyApplicableType> = TRACK_AND_GROUPING
-
-    override fun canDuplicate(): Boolean = true
 }
+
+data class Artwork(var name: String,
+                   val artwork: Image)

@@ -9,8 +9,7 @@ import charlie.laplacian.track.property.PropertyType
 
 abstract class IntegerTypeProperty(private var value: Int,
                                    private val i18NKey: String,
-                                   private val applicableTypes: Set<PropertyApplicableType>,
-                                   private val canDuplicate: Boolean): Property() {
+                                   private val applicableTypes: Set<PropertyApplicableType>): Property() {
     override fun getName(): String = I18n.getString(i18NKey)
 
     override fun getValue(): Any = value
@@ -24,13 +23,11 @@ abstract class IntegerTypeProperty(private var value: Int,
     override fun getType(): PropertyType = PropertyType.NUMBER
 
     override fun getApplicableFor(): Set<PropertyApplicableType> = applicableTypes
-
-    override fun canDuplicate(): Boolean = canDuplicate
 }
 
 class TrackNumberProperty(value: Int): IntegerTypeProperty(value, "property.essential.trackNumberProperty.name",
-        TRACK_ONLY, false)
+        TRACK_ONLY)
 class ReleaseYearProperty(value: Int): IntegerTypeProperty(value, "property.essential.releaseYearProperty.name",
-        TRACK_AND_GROUPING, false)
+        TRACK_AND_GROUPING)
 class BPMProperty(value: Int): IntegerTypeProperty(value, "property.essential.bpmProperty.name",
-        TRACK_ONLY, false)
+        TRACK_ONLY)

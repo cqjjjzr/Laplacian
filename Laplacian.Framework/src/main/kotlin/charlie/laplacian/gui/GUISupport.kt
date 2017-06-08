@@ -1,4 +1,4 @@
-package charlie.laplacian.gui.essential
+package charlie.laplacian.gui
 
 interface GUISupport {
     fun init()

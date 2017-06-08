@@ -2,8 +2,8 @@ package charlie.laplacian.config
 
 import charlie.laplacian.decoder.Decoder
 import charlie.laplacian.decoder.DecoderRegistry
-import charlie.laplacian.gui.essential.GUIRegistery
-import charlie.laplacian.gui.essential.GUISupport
+import charlie.laplacian.gui.GUIRegistery
+import charlie.laplacian.gui.GUISupport
 import charlie.laplacian.output.OutputMethodRegistry
 import charlie.laplacian.output.OutputSettings
 import charlie.laplacian.stream.TrackStream

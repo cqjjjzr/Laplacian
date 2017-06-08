@@ -9,8 +9,7 @@ import charlie.laplacian.track.property.PropertyType
 
 abstract class StringTypeProperty(private var value: String,
                                   private val i18NKey: String,
-                                  private val applicableTypes: Set<PropertyApplicableType>,
-                                  private val canDuplicate: Boolean): Property() {
+                                  private val applicableTypes: Set<PropertyApplicableType>): Property() {
     override fun getName(): String = I18n.getString(i18NKey)
 
     override fun getValue(): Any = value
@@ -23,19 +22,17 @@ abstract class StringTypeProperty(private var value: String,
     }
 
     override fun getApplicableFor(): Set<PropertyApplicableType> = applicableTypes
-
-    override fun canDuplicate(): Boolean = canDuplicate
 }
 
 class NameProperty(value: String): StringTypeProperty(value, "property.essential.nameProperty.name",
-        TRACK_AND_GROUPING, false)
+        TRACK_AND_GROUPING)
 class ArtistProperty(value: String): StringTypeProperty(value, "property.essential.artistProperty.name",
-        TRACK_AND_GROUPING, true)
+        TRACK_AND_GROUPING)
 class AlbumProperty(value: String): StringTypeProperty(value, "property.essential.albumProperty.name",
-        TRACK_ONLY, false)
+        TRACK_ONLY)
 class AlbumArtistProperty(value: String): StringTypeProperty(value, "property.essential.albumArtistProperty.name",
-        TRACK_ONLY, false)
+        TRACK_ONLY)
 class ComposerProperty(value: String): StringTypeProperty(value, "property.essential.composerProperty.name",
-        TRACK_AND_GROUPING, false)
+        TRACK_AND_GROUPING)
 class GenreProperty(value: String): StringTypeProperty(value, "property.essential.genreProperty.name",
-        TRACK_AND_GROUPING, true)
+        TRACK_AND_GROUPING)

@@ -10,7 +10,6 @@ abstract class Property: Serializable {
 
     abstract fun getType(): PropertyType
     abstract fun getApplicableFor(): Set<PropertyApplicableType>
-    abstract fun canDuplicate(): Boolean
 
     override fun equals(other: Any?): Boolean = other != null && this.javaClass.isAssignableFrom(other.javaClass)
     override fun hashCode(): Int = 31 * getName().hashCode() * getValue().hashCode() * getType().hashCode()
@@ -22,7 +21,7 @@ enum class PropertyApplicableType {
 }
 
 enum class PropertyType {
-    STRING, NUMBER, IMAGE, PROPERTY_ITEM, ALIAS, REFERENCE
+    STRING, NUMBER, IMAGE, LIST, REFERENCE
 }
 
 // FOR OPTIMIZE
