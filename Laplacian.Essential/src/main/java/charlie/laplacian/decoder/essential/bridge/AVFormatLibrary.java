@@ -31,11 +31,11 @@ public interface AVFormatLibrary {
         }
     }
 
-    class AVInputFormat extends Structure {
-        public static class ByReference extends AVInputFormat implements Structure.ByReference {}
-        public static class ByValue extends AVInputFormat implements Structure.ByValue {}
+    class AVFormatContext extends Structure {
+        public static class ByReference extends AVFormatContext implements Structure.ByReference {}
+        public static class ByValue extends AVFormatContext implements Structure.ByValue {}
 
-        // TODO AAAAAAAAAAAAAAAAAAHHHHHHHHHHFUCK Add AVIOContext struct here!
+        // TODO AAAAAAAAAAAAAAAAAAHHHHHHHHHHFUCK Add AVFormatContext struct here!
         @Override
         protected List<String> getFieldOrder() {
             return null;
@@ -62,6 +62,6 @@ public interface AVFormatLibrary {
                                   int maxProbeSize);
     int avformat_open_input(Pointer outAVFormatContext,
                             String url,
-                            AVInputFormat.ByReference avInputFormat,
+                            Pointer avInputFormat,
                             Pointer dictArgs);
 }
