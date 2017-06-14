@@ -17,17 +17,18 @@ object Configuration {
 
     private var conf: XMLConfiguration? = null
 
-    fun getDecoder(stream: TrackStream): Decoder =
-            OutputSettings(
-                    conf!!.getFloat("output.sampleRateHz", ConfigurationDefaultValues.mixerSampleRateHz),
-                    conf!!.getInt("output.bitDepth", ConfigurationDefaultValues.bitDepth),
-                    conf!!.getInt("output.numChannels", ConfigurationDefaultValues.numChannels)
-            ).run {
-                DecoderRegistry.tryDecode(
-                        OutputMethodRegistry
-                                .getOutputMethod(conf!!.getString("output.mixer", ConfigurationDefaultValues.mixerClassName))
-                                .openDevice(this), this, stream)
-            }
+    fun getDecoder(stream: TrackStream): Decoder = DecoderRegistry.tryDecode(getOutputSettings(), stream)
+
+    fun getOutputSettings() = OutputSettings(
+            conf!!.getFloat("output.sampleRateHz", ConfigurationDefaultValues.mixerSampleRateHz),
+            conf!!.getInt("output.bitDepth", ConfigurationDefaultValues.bitDepth),
+            conf!!.getInt("output.numChannels", ConfigurationDefaultValues.numChannels)
+    )
+
+    fun getOutputDevice(outputSettings: OutputSettings) =
+            OutputMethodRegistry
+            .getOutputMethod(conf!!.getString("output.mixer", ConfigurationDefaultValues.mixerClassName))
+            .openDevice(outputSettings)
 
     fun getGUISupport(): GUISupport = GUIRegistery.findGUI(conf!!.getString("gui.guiSupport", ConfigurationDefaultValues.guiSupportClassName))
 

@@ -1,6 +1,5 @@
 package charlie.laplacian.decoder
 
-import charlie.laplacian.output.OutputDevice
 import charlie.laplacian.output.OutputSettings
 import charlie.laplacian.stream.TrackStream
 import java.util.*
@@ -35,11 +34,11 @@ object DecoderRegistry {
         }
     }
 
-    fun tryDecode(outputDevice: OutputDevice, outputSettings: OutputSettings, stream: TrackStream): Decoder {
+    fun tryDecode(outputSettings: OutputSettings, stream: TrackStream): Decoder {
         var e: Throwable? = null
         decoderFactories.forEach {
             try {
-                return it.getDecoder(outputDevice, outputSettings, stream)
+                return it.getDecoder(outputSettings, stream)
             } catch (ex: Exception) {
                 e = ex
             }
