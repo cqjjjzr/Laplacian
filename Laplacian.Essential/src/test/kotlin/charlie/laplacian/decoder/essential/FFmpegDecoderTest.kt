@@ -33,7 +33,7 @@ class FFmpegDecoderTest {
             println()
         }
         FFmpegDecoder.init()
-        OutputSettings(44100f, 16, 2).apply {
+        /*OutputSettings(44100f, 16, 2).apply {
             FFmpegDecoderFactory()
                     .getDecoder(JavaSoundOutputMethod().openDevice(this), this, FileSource().streamFrom(
                             FileTrackSourceInfo(
@@ -41,7 +41,7 @@ class FFmpegDecoderTest {
                 play()
                 Thread.sleep(10000)
                 close()
-            }
+            }*/
         }
     }
 

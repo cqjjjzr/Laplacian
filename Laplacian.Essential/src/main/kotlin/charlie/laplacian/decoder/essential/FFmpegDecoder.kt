@@ -5,16 +5,14 @@ import charlie.laplacian.decoder.DecoderFactory
 import charlie.laplacian.decoder.DecoderMetadata
 import charlie.laplacian.output.OutputSettings
 import charlie.laplacian.stream.TrackStream
-import charlie.laplacian.stream.essential.FileTrackStream
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import org.ffmpeg.avformat.AVFormatLibrary
 
 class FFmpegDecoder: Decoder {
     companion object {
         private val logger: Logger = LogManager.getLogger("decoder")
-        @JvmStatic
-        private external fun globalInit()
         @JvmStatic
         private fun writeLog(message: String, levelID: Int) {
             logger.log(
@@ -30,8 +28,7 @@ class FFmpegDecoder: Decoder {
                     }, message)
         }
         fun init() {
-            System.loadLibrary("libFFmpegDecoder")
-            globalInit()
+            AVFormatLibrary.av_register_all()
         }
     }
 
@@ -87,12 +84,6 @@ class FFmpegDecoder: Decoder {
         init(outputSettings)
     }
 
-    constructor(outputSettings: OutputSettings, url: String)
-            : this(outputSettings) {
-        initWithURL(url)
-        init(outputSettings)
-    }
-
     private fun init(outputSettings: OutputSettings) {
         outputSettings.apply {
             startupNativeLibs(sampleRateHz, bitDepth, numChannel)
@@ -104,9 +95,6 @@ class FFmpegDecoder: Decoder {
 
 class FFmpegDecoderFactory: DecoderFactory {
     override fun getDecoder(outputSettings: OutputSettings, stream: TrackStream): Decoder {
-        if (stream is FileTrackStream)
-            return FFmpegDecoder(outputSettings, stream.getPath().toString())
-        // TODO Add more simple URLStream here
         return FFmpegDecoder( outputSettings, stream)
     }
 
