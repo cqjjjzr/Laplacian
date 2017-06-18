@@ -3,12 +3,12 @@ package charlie.laplacian.decoder.essential
 import charlie.laplacian.decoder.Decoder
 import charlie.laplacian.decoder.DecoderFactory
 import charlie.laplacian.decoder.DecoderMetadata
+import charlie.laplacian.decoder.essential.ffmpeg.internal.FFmpegDecodeBridge
 import charlie.laplacian.output.OutputSettings
 import charlie.laplacian.stream.TrackStream
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import org.ffmpeg.avformat.AVFormatLibrary
 
 class FFmpegDecoder: Decoder {
     companion object {
@@ -28,7 +28,7 @@ class FFmpegDecoder: Decoder {
                     }, message)
         }
         fun init() {
-            AVFormatLibrary.av_register_all()
+            FFmpegDecodeBridge.init()
         }
     }
 

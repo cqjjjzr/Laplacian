@@ -1,19 +1,24 @@
 package charlie.laplacian.decoder.essential.ffmpeg.internal;
 
+import com.sun.jna.Memory;
+import com.sun.jna.Pointer;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bridj.BridJ;
-import org.bridj.Pointer;
-import org.ffmpeg.avutil.AVUtilLibrary;
+import org.ffmpeg.avutil55.Avutil55Library;
 
-import static org.ffmpeg.avutil.AVUtilLibrary.*;
+import java.nio.IntBuffer;
 
-public class FFmpegLogHelper extends AVUtilLibrary.av_log_set_callback_callback_callback {
+import static org.ffmpeg.avutil55.Avutil55Library.*;
+
+public class FFmpegLogHelper implements Avutil55Library.av_log_set_callback_callback_callback {
     private Logger logger = LogManager.getLogger("decoder");
+    private IntBuffer prefix = IntBuffer.allocate(1);
+
+    private static FFmpegLogHelper INSTANCE = new FFmpegLogHelper();
 
     @Override
-    public void apply(Pointer<?> voidPtr1, int levelID, Pointer<Byte> formatPtr, Pointer args) {
+    public void apply(Pointer voidPtr1, int levelID, Pointer formatPtr, Pointer args) {
         Level level;
         switch(levelID) { // SEE FFmpeg libavutil/log.h
             case AV_LOG_QUIET:
@@ -34,14 +39,14 @@ public class FFmpegLogHelper extends AVUtilLibrary.av_log_set_callback_callback_
             default:
                 level = Level.DEBUG;
         }
-        //String message = String.format(formatPtr.getString(Pointer.StringType.C), args);
-        String message = formatPtr.getString(Pointer.StringType.C);
+
+        Memory line = new Memory(128L);
+        Avutil55Library.INSTANCE.av_log_format_line(voidPtr1, levelID, formatPtr, args, line.share(0), 128, prefix);
+        String message = String.format(line.getString(0), args).trim();
         logger.log(level, message);
     }
 
     public static void initLogHelper() {
-        FFmpegLogHelper helper = new FFmpegLogHelper();
-        AVUtilLibrary.av_log_set_callback(Pointer.getPointer(helper));
-        BridJ.protectFromGC(helper);
+        Avutil55Library.INSTANCE.av_log_set_callback(INSTANCE);
     }
 }

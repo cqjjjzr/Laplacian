@@ -1,7 +1,17 @@
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+
+	dependencies {
+		classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.2-2'
+	}
+}
+
 plugins {
 		id "java"
 }
-apply plugin: 'kotlin'
+apply plugin: "kotlin"
 
 group = 'com.github.cqjjjzr'
 version = '1.0-SNAPSHOT'
@@ -20,19 +30,20 @@ repositories {
 dependencies {
     compile project(":Laplacian.Framework")
 
-	compile 'com.nativelibs4java:bridj:0.7.0'
+	compile group: 'com.nativelibs4java', name: 'jnaerator-runtime', version: '0.11'
 
 	testCompile group: 'org.jetbrains.kotlin', name: 'kotlin-test-junit', version:'1.1.0'
 	testCompile group: 'junit', name: 'junit', version:'4.12'
 }
 
 project.ext.nativeProfile = 'Release'
-project.ext.mingw_w64_gcc = 'D:/mingw-w64/x86_64-6.3.0-posix-seh-rt_v5-rev1/mingw64/bin/gcc.exe'
-project.ext.mingw_w64_gxx = 'D:/mingw-w64/x86_64-6.3.0-posix-seh-rt_v5-rev1/mingw64/bin/g++.exe'
-project.ext.mingw_w64_make = 'D:/mingw-w64/x86_64-6.3.0-posix-seh-rt_v5-rev1/mingw64/bin/mingw32-make.exe'
+//project.ext.mingw_w64_gcc = 'D:/mingw-w64/x86_64-6.3.0-posix-seh-rt_v5-rev1/mingw64/bin/gcc.exe'
+//project.ext.mingw_w64_gxx = 'D:/mingw-w64/x86_64-6.3.0-posix-seh-rt_v5-rev1/mingw64/bin/g++.exe'
+//project.ext.mingw_w64_make = 'D:/mingw-w64/x86_64-6.3.0-posix-seh-rt_v5-rev1/mingw64/bin/mingw32-make.exe'
 
 task initNativeLibs(type: Exec) {
-	workingDir 'LogFormatter/'  commandLine 'cmake', '-DCMAKE_BUILD_TYPE=' + project.ext.nativeProfile, '-DCMAKE_C_COMPILER=' + project.ext.mingw_w64_gcc, '-DCMAKE_CXX_COMPILER=' + project.ext.mingw_w64_gxx, '-DCMAKE_MAKE_PROGRAM=' + project.ext.mingw_w64_make, '-DTARGET_ARCH=x86_64-w64-mingw64', '-DCMAKE_BUILD_TYPE=' + project.ext.nativeProfile, '-G',  '\"CodeBlocks - MinGW Makefiles\"'
+	//workingDir 'LogFormatter/'  commandLine 'cmake', '-DCMAKE_BUILD_TYPE=' + project.ext.nativeProfile, '-DCMAKE_C_COMPILER=' + project.ext.mingw_w64_gcc, '-DCMAKE_CXX_COMPILER=' + project.ext.mingw_w64_gxx, '-DCMAKE_MAKE_PROGRAM=' + project.ext.mingw_w64_make, '-DTARGET_ARCH=x86_64-w64-mingw64', '-DCMAKE_BUILD_TYPE=' + project.ext.nativeProfile, '-G',  '\"CodeBlocks - MinGW Makefiles\"'
+	workingDir 'LogFormatter/'  commandLine 'cmake', '-DCMAKE_BUILD_TYPE=' + project.ext.nativeProfile
 }
 
 task buildNativeLibs(type: Exec) {

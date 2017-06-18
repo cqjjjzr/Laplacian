@@ -2,14 +2,14 @@
 <configuration status="OFF">
     <appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] [%-5level] %logger{36} - %msg%n"/>
         </Console>
         <Console name="ConsoleError" target="SYSTEM_ERR">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] [%-5level] %logger{36} - %msg%n"/>
         </Console>
     </appenders>
     <loggers>
-        <logger name="decoder" level="info">
+        <logger name="decoder" level="info" additivity="false">
             <appender-ref ref="Console"/>
         </logger>
     </loggers>
