@@ -1,5 +1,6 @@
 package charlie.laplacian.decoder.essential
 
+import charlie.laplacian.config.ConfigurationDefaultValues.bitDepth
 import charlie.laplacian.decoder.Decoder
 import charlie.laplacian.decoder.DecoderFactory
 import charlie.laplacian.decoder.DecoderMetadata
@@ -9,7 +10,7 @@ import charlie.laplacian.stream.TrackStream
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-
+/*
 class FFmpegDecoder: Decoder {
     companion object {
         private val logger: Logger = LogManager.getLogger("decoder")
@@ -34,19 +35,9 @@ class FFmpegDecoder: Decoder {
 
     @Volatile
     private var closed: Boolean = false
-    private var pointerAVCodecContext: Long = 0
-    private var pointerAVFormatContext: Long = 0
-
-    @Volatile
-    private var position: Long = 0
-    private var duration: Long = 0
 
     @Volatile
     private var audioStreamIndex: Int = -1
-
-    private val numChannel: Int
-    private val sampleRateHz: Float
-    private val bitDepth: Int
 
     override external fun seek(positionMillis: Long)
 
@@ -110,4 +101,4 @@ object FFmpegDecoderMetadata: DecoderMetadata {
     override fun getVersion(): String = "rv1"
 
     override fun getVersionID(): Int = 1
-}
+}*/

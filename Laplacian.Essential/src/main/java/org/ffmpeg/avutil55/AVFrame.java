@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class AVFrame extends Structure {
 	/** C type : uint8_t*[8] */
-	public PointerByReference data;
+	public Pointer[] data = new Pointer[8];
 	/** C type : int[8] */
 	public int[] linesize = new int[8];
 	/** C type : uint8_t** */
@@ -49,10 +49,10 @@ public class AVFrame extends Structure {
 	/** C type : AVBufferRef*[8] */
 	public org.ffmpeg.avutil55.AVBufferRef.ByReference[] buf = new org.ffmpeg.avutil55.AVBufferRef.ByReference[8];
 	/** C type : AVBufferRef** */
-	public org.ffmpeg.avutil55.AVBufferRef.ByReference[] extended_buf;
+	public Pointer extended_buf;
 	public int nb_extended_buf;
 	/** C type : AVFrameSideData** */
-	public org.ffmpeg.avutil55.AVFrameSideData.ByReference[] side_data;
+	public Pointer side_data;
 	public int nb_side_data;
 	public int flags;
 	/**
@@ -84,7 +84,7 @@ public class AVFrame extends Structure {
 	public long pkt_pos;
 	public long pkt_duration;
 	/** C type : AVDictionary* */
-	public org.ffmpeg.avutil55.AVDictionary.ByReference metadata;
+	public Pointer metadata;
 	public int decode_error_flags;
 	public int channels;
 	public int pkt_size;
@@ -93,11 +93,11 @@ public class AVFrame extends Structure {
 	public int qstride;
 	public int qscale_type;
 	/** C type : AVBufferRef* */
-	public org.ffmpeg.avutil55.AVBufferRef.ByReference qp_table_buf;
+	public Pointer qp_table_buf;
 	/** C type : AVBufferRef* */
-	public org.ffmpeg.avutil55.AVBufferRef.ByReference hw_frames_ctx;
+	public Pointer hw_frames_ctx;
 	/** C type : AVBufferRef* */
-	public org.ffmpeg.avutil55.AVBufferRef.ByReference opaque_ref;
+	public Pointer opaque_ref;
 	public AVFrame() {
 		super();
 	}

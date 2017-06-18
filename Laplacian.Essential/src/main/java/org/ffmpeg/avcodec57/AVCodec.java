@@ -66,10 +66,10 @@ public class AVCodec extends Structure {
 	 * < array of recognized profiles, or NULL if unknown, array is terminated by {FF_PROFILE_UNKNOWN}<br>
 	 * C type : const AVProfile*
 	 */
-	public org.ffmpeg.avcodec57.AVProfile.ByReference profiles;
+	public Pointer profiles;
 	public int priv_data_size;
 	/** C type : AVCodec* */
-	public ByReference next;
+	public Pointer next;
 	/** C type : init_thread_copy_callback* */
 	public init_thread_copy_callback init_thread_copy;
 	/** C type : update_thread_context_callback* */

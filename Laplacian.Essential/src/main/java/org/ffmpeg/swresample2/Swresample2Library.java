@@ -233,7 +233,7 @@ public interface Swresample2Library extends Library {
 	 * Original signature : <code>int swr_convert(SwrContext*, uint8_t**, int, const uint8_t**, int)</code><br>
 	 * <i>native declaration : libswresample\swresample.h:126</i>
 	 */
-	int swr_convert(SwrContext s, PointerByReference out, int out_count, PointerByReference in, int in_count);
+	int swr_convert(SwrContext s, PointerByReference out, int out_count, Pointer[] in, int in_count);
 	/**
 	 * Convert the next timestamp from input to output<br>
 	 * timestamps are in 1/(in_sample_rate * out_sample_rate) units.<br>

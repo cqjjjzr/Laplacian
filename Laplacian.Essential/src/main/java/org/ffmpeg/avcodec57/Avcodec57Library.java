@@ -3192,7 +3192,7 @@ public interface Avcodec57Library extends Library {
 	 * Original signature : <code>int avcodec_send_packet(AVCodecContext*, const AVPacket*)</code><br>
 	 * <i>native declaration : .\libavcodec\avcodec.h:1811</i>
 	 */
-	int avcodec_send_packet(AVCodecContext avctx, AVPacket avpkt);
+	int avcodec_send_packet(AVCodecContext avctx, Pointer avpkt);
 	/**
 	 * Return decoded output data from a decoder.<br>
 	 * @param avctx codec context<br>

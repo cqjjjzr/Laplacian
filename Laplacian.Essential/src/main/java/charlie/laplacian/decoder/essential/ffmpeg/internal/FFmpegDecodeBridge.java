@@ -4,7 +4,11 @@ import charlie.laplacian.decoder.DecoderException;
 import charlie.laplacian.decoder.InvalidInputMediaException;
 import charlie.laplacian.decoder.UnsupportedCodecException;
 import charlie.laplacian.decoder.essential.FFmpegException;
+import charlie.laplacian.output.OutputDevice;
+import charlie.laplacian.output.OutputLine;
+import charlie.laplacian.output.OutputMethod;
 import charlie.laplacian.output.OutputSettings;
+import charlie.laplacian.output.essential.JavaSoundOutputMethod;
 import charlie.laplacian.source.essential.FileSource;
 import charlie.laplacian.source.essential.FileTrackSourceInfo;
 import charlie.laplacian.stream.SeekableTrackStream;
@@ -21,9 +25,11 @@ import org.ffmpeg.avcodec57.Avcodec57Library;
 import org.ffmpeg.avformat57.*;
 import org.ffmpeg.avutil55.AVDictionary;
 import org.ffmpeg.avutil55.AVFrame;
+import org.ffmpeg.avutil55.AVRational;
 import org.ffmpeg.avutil55.Avutil55Library;
 import org.ffmpeg.swresample2.SwrContext;
 import org.ffmpeg.swresample2.Swresample2Library;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.Arrays;
@@ -38,11 +44,14 @@ public class FFmpegDecodeBridge {
     public static final int MAX_AUDIO_FRAME_SIZE = 192000;
 
     private Pointer buffer;
+    private Avformat57Library.avio_alloc_context_read_packet_callback readPacket;
+    private Avformat57Library.avio_alloc_context_seek_callback seek;
     private AVIOContext.ByReference ioContext;
 
     private Pointer audioBuffer = null;
     private AVFormatContext.ByReference formatContext;
     private AVInputFormat inputFormat;
+    private AVStream avStream;
     private AVCodecContext codecContext;
     private SwrContext swrContext;
 
@@ -50,6 +59,8 @@ public class FFmpegDecodeBridge {
     private OutputSettings outputSettings;
     private int audioStreamIndex = -1;
     private int sampleFormat;
+
+    private long position = 0;
 
     public FFmpegDecodeBridge(TrackStream stream, OutputSettings outputSettings) throws DecoderException {
         this.stream = stream;
@@ -83,8 +94,8 @@ public class FFmpegDecodeBridge {
 
     private void openIOContext() throws FFmpegException {
         buffer = Avutil55Library.INSTANCE.av_malloc(new NativeSize(FFMPEG_IO_BUFFER_SIZE));
-        avio_alloc_context_read_packet_callback readPacket = new AVIOReadPacketImpl();
-        avio_alloc_context_seek_callback seek = new AVIOSeekImpl();
+        readPacket = new AVIOReadPacketImpl();
+        seek = new AVIOSeekImpl();
 
         ioContext = Avformat57Library.INSTANCE.avio_alloc_context(buffer, FFMPEG_IO_BUFFER_SIZE,
                 0, // Write disabled
@@ -137,6 +148,7 @@ public class FFmpegDecodeBridge {
             stream.read();
             if (stream.codecpar.codec_type == AVMEDIA_TYPE_AUDIO) {
                 audioStreamIndex = i;
+                avStream = stream;
                 openDecoder(stream);
                 break;
             }
@@ -155,6 +167,7 @@ public class FFmpegDecodeBridge {
             throw new UnsupportedCodecException("Codec ID " + stream.codecpar.codec_id + " not supported!");
         }
         codecContext = Avcodec57Library.INSTANCE.avcodec_alloc_context3(codec);
+        codecContext.setAutoSynch(false);
 
         int retval;
         retval = Avcodec57Library.INSTANCE.avcodec_parameters_to_context(codecContext, stream.codecpar);
@@ -172,6 +185,7 @@ public class FFmpegDecodeBridge {
 
     private void prepareResample() {
         swrContext = Swresample2Library.INSTANCE.swr_alloc();
+        codecContext.read();
 
         sampleFormat = outputSettings.getBitDepth() == 16 ? AV_SAMPLE_FMT_S16 :
                 (outputSettings.getBitDepth() == 32 ? AV_SAMPLE_FMT_S32 : AV_SAMPLE_FMT_S64);
@@ -202,17 +216,19 @@ public class FFmpegDecodeBridge {
     }
 
     private AVPacket packet = new AVPacket();
+    @Nullable
     public byte[] tryRead() throws FFmpegException {
         int retval;
         while (true) {
             retval = Avformat57Library.INSTANCE.av_read_frame(formatContext, packet);
             if (retval < 0) return null;
+            packet.read();
             if (packet.stream_index != audioStreamIndex) {
                 Avcodec57Library.INSTANCE.av_packet_unref(packet);
             } else break;
         }
 
-        retval = Avcodec57Library.INSTANCE.avcodec_send_packet(codecContext, packet);
+        retval = Avcodec57Library.INSTANCE.avcodec_send_packet(codecContext, packet.getPointer());
         if (retval < 0 && retval != -11 && retval != AVERROR_EOF) {
             throw new FFmpegException("Decode packet failed! avcodec_send_packet returned " + retval);
         }
@@ -222,6 +238,9 @@ public class FFmpegDecodeBridge {
         if (retval < 0 && retval != AVERROR_EOF) {
             throw new FFmpegException("Decode packet failed! avcodec_receive_frame returned " + retval);
         }
+        frame.read();
+
+        updatePosition(frame);
 
         fixFrameArgs(frame);
 
@@ -235,7 +254,15 @@ public class FFmpegDecodeBridge {
         int dataSize = frame.channels * numSamples * Avutil55Library.INSTANCE.av_get_bytes_per_sample(sampleFormat);
         Avutil55Library.INSTANCE.av_frame_free(new PointerByReference(frame.getPointer()));
 
+        audioBuffer = tempPtr.getValue();
         return Arrays.copyOf(audioBuffer.getByteArray(0, dataSize), dataSize);
+    }
+
+    private void updatePosition(AVFrame frame) {
+        AVRational.ByValue time = new AVRational.ByValue();
+        time.den = avStream.time_base.den;
+        time.num = avStream.time_base.num;
+        position = (long) (frame.pts * (double) avStream.time_base.num * 1000 / avStream.time_base.den);
     }
 
     private void fixFrameArgs(AVFrame frame) {
@@ -244,6 +271,14 @@ public class FFmpegDecodeBridge {
         else if (frame.channels == 0 && frame.channel_layout > 0) {
             frame.channels = Avutil55Library.INSTANCE.av_get_channel_layout_nb_channels(frame.channel_layout);
         }
+    }
+
+    public long getDurationMillis() {
+        return formatContext.duration / 1000;
+    }
+
+    public long getPositionMillis() {
+        return position;
     }
 
     private class AVIOReadPacketImpl implements Avformat57Library.avio_alloc_context_read_packet_callback {
@@ -302,11 +337,19 @@ public class FFmpegDecodeBridge {
     }
 
     public static void main(String[] args) throws DecoderException {
+        OutputSettings settings = new OutputSettings(44100,16,2);
         FFmpegDecodeBridge.init();
         FFmpegDecodeBridge bridge = new FFmpegDecodeBridge(new FileSource().streamFrom(new FileTrackSourceInfo(
                 new File("E:\\iTunes\\iTunes Media\\Music\\Yonder Voice\\雪幻ティルナノーグ\\01 雪幻ティルナノーグ.m4a"))),
-                new OutputSettings(44100,16,2));
-        System.out.println(Arrays.toString(bridge.tryRead()));
+                settings);
+        OutputMethod method = new JavaSoundOutputMethod();
+        OutputDevice device = method.openDevice(settings);
+        OutputLine line = device.openLine();
+        line.open();
+        byte[] buf;
+        while ((buf = bridge.tryRead()) != null)
+            line.mix(buf, 0, buf.length);
+        device.closeLine(line);
         bridge.close();
     }
 }
