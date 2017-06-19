@@ -38,6 +38,7 @@ import static org.ffmpeg.avformat57.Avformat57Library.*;
 import static org.ffmpeg.avutil55.Avutil55Library.AVERROR_EOF;
 import static org.ffmpeg.avutil55.Avutil55Library.AVMediaType.AVMEDIA_TYPE_AUDIO;
 import static org.ffmpeg.avutil55.Avutil55Library.AVSampleFormat.*;
+import static org.ffmpeg.avutil55.Avutil55Library.AV_TIME_BASE;
 
 public class FFmpegDecodeBridge {
     public static final int FFMPEG_IO_BUFFER_SIZE = 1024 * 512; // 512 KB
@@ -51,7 +52,6 @@ public class FFmpegDecodeBridge {
     private Pointer audioBuffer = null;
     private AVFormatContext.ByReference formatContext;
     private AVInputFormat inputFormat;
-    private AVStream avStream;
     private AVCodecContext codecContext;
     private SwrContext swrContext;
 
@@ -148,7 +148,6 @@ public class FFmpegDecodeBridge {
             stream.read();
             if (stream.codecpar.codec_type == AVMEDIA_TYPE_AUDIO) {
                 audioStreamIndex = i;
-                avStream = stream;
                 openDecoder(stream);
                 break;
             }
@@ -260,9 +259,9 @@ public class FFmpegDecodeBridge {
 
     private void updatePosition(AVFrame frame) {
         AVRational.ByValue time = new AVRational.ByValue();
-        time.den = avStream.time_base.den;
-        time.num = avStream.time_base.num;
-        position = (long) (frame.pts * (double) avStream.time_base.num * 1000 / avStream.time_base.den);
+        time.den = codecContext.time_base.den;
+        time.num = codecContext.time_base.num;
+        position = (long) (frame.pts * (double) codecContext.time_base.num * 1000 / codecContext.time_base.den);
     }
 
     private void fixFrameArgs(AVFrame frame) {
@@ -271,6 +270,14 @@ public class FFmpegDecodeBridge {
         else if (frame.channels == 0 && frame.channel_layout > 0) {
             frame.channels = Avutil55Library.INSTANCE.av_get_channel_layout_nb_channels(frame.channel_layout);
         }
+    }
+
+    public void seek(long positionMillis) throws DecoderException {
+        int retval = Avformat57Library.INSTANCE.av_seek_frame(formatContext, -1,
+                AV_TIME_BASE * positionMillis / 1000, AVSEEK_FLAG_BACKWARD);
+        if (retval < 0)
+            throw new FFmpegException("Failed to seek! av_seek_frame returned error code " + retval);
+        this.position = positionMillis;
     }
 
     public long getDurationMillis() {
@@ -346,6 +353,7 @@ public class FFmpegDecodeBridge {
         OutputDevice device = method.openDevice(settings);
         OutputLine line = device.openLine();
         line.open();
+        bridge.seek(5000);
         byte[] buf;
         while ((buf = bridge.tryRead()) != null)
             line.mix(buf, 0, buf.length);
