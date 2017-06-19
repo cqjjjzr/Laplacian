@@ -63,6 +63,9 @@ public class FFmpegDecodeBridge {
     private long position = 0;
 
     public FFmpegDecodeBridge(TrackStream stream, OutputSettings outputSettings) throws DecoderException {
+        if (outputSettings.getBitDepth() != 32 && outputSettings.getBitDepth() != 16 && outputSettings.getBitDepth() != 64)
+            throw new IllegalArgumentException("bit depth must be 32, 64 or 16");
+
         this.stream = stream;
         this.outputSettings = outputSettings;
 
@@ -217,6 +220,8 @@ public class FFmpegDecodeBridge {
     private AVPacket packet = new AVPacket();
     @Nullable
     public byte[] tryRead() throws FFmpegException {
+        if (formatContext == null) throw new IllegalStateException("Decoder is already closed");
+
         int retval;
         while (true) {
             retval = Avformat57Library.INSTANCE.av_read_frame(formatContext, packet);
@@ -273,6 +278,8 @@ public class FFmpegDecodeBridge {
     }
 
     public void seek(long positionMillis) throws DecoderException {
+        if (formatContext == null) throw new IllegalStateException("Decoder is already closed");
+
         int retval = Avformat57Library.INSTANCE.av_seek_frame(formatContext, -1,
                 AV_TIME_BASE * positionMillis / 1000, AVSEEK_FLAG_BACKWARD);
         if (retval < 0)
@@ -281,10 +288,12 @@ public class FFmpegDecodeBridge {
     }
 
     public long getDurationMillis() {
+        if (formatContext == null) throw new IllegalStateException("Decoder is already closed");
         return formatContext.duration / 1000;
     }
 
     public long getPositionMillis() {
+        if (formatContext == null) throw new IllegalStateException("Decoder is already closed");
         return position;
     }
 
