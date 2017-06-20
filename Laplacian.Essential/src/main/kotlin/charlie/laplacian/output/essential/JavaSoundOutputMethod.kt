@@ -5,6 +5,7 @@ import java.nio.charset.Charset
 import java.util.*
 import javax.sound.sampled.*
 import javax.sound.sampled.FloatControl.Type.MASTER_GAIN
+import kotlin.collections.plusAssign
 import kotlin.experimental.and
 
 class JavaSoundOutputMethod : OutputMethod {
@@ -52,41 +53,43 @@ class JavaSoundOutputDevice(outputSettings: OutputSettings): OutputDevice {
 }
 
 class JavaSoundOutputDeviceInfo(private val mixer: Mixer): OutputDeviceInfo {
-    override fun getName(): String = deMessyCode(mixer.mixerInfo.name)
+    override fun getName(): String = javaSoundRecoverMessyCode(mixer.mixerInfo.name)
 
-    override fun getAvailableSettings(): Array<OutputSettings> =
-            LinkedList<OutputSettings>().apply list@ {
-                mixer.sourceLineInfo.forEach {
-                    AudioSystem.getLine(it).apply {
-                        if (this is SourceDataLine)
-                            (this.lineInfo as DataLine.Info).formats
-                                    .filter { !it.isBigEndian }
-                                    .filter { it.encoding == AudioFormat.Encoding.PCM_SIGNED }
-                                    .filter { it.sampleSizeInBits != 24 }
-                                    .forEach {
-                                        this@list += OutputSettings(it.sampleRate, it.sampleSizeInBits, it.channels)
-                                    }
-                    }
-                }
-            }.toTypedArray()
-
-    private val HIGH_IDENTIFY = 0b11000000.toByte()
-    fun deMessyCode(string: String): String {
-        return String(ArrayList<Byte>().apply buf@ {
-            string.toByteArray().apply {
-                var i = 0
-                while (i < this.size) {
-                    if ((this[i] and HIGH_IDENTIFY) == HIGH_IDENTIFY) {
-                        this@buf += (this[i].toInt() shl 6 or (this[i + 1].toInt() shl 2 ushr 2)).toByte()
-                        i++
-                    } else {
-                        this@buf += this[i]
-                    }
-                    i++
-                }
+    override fun getAvailableSettings(): Array<OutputSettings> {
+        val list = ArrayList<OutputSettings>(mixer.sourceLineInfo.size)
+        mixer.sourceLineInfo.forEach {
+            AudioSystem.getLine(it).apply {
+                if (this is SourceDataLine)
+                    (this.lineInfo as DataLine.Info).formats
+                            .filter { !it.isBigEndian }
+                            .filter { it.encoding == AudioFormat.Encoding.PCM_SIGNED }
+                            .filter { it.sampleSizeInBits != 24 }
+                            .filter { it.sampleRate > 0 }
+                            .forEach {
+                                list += OutputSettings(it.sampleRate, it.sampleSizeInBits, it.channels)
+                            }
             }
-        }.toByteArray(), Charset.forName(System.getProperty("file.encoding")))
+        }
+        return list.toTypedArray()
     }
+}
+
+private val HIGH_IDENTIFY = 0b11000000.toByte()
+fun javaSoundRecoverMessyCode(string: String): String {
+    return String(ArrayList<Byte>().apply buf@ {
+        string.toByteArray().apply {
+            var i = 0
+            while (i < this.size) {
+                if ((this[i] and HIGH_IDENTIFY) == HIGH_IDENTIFY) {
+                    this@buf += (this[i].toInt() shl 6 or (this[i + 1].toInt() shl 2 ushr 2)).toByte()
+                    i++
+                } else {
+                    this@buf += this[i]
+                }
+                i++
+            }
+        }
+    }.toByteArray(), Charset.forName(System.getProperty("file.encoding")))
 }
 
 object JavaSoundMetadata: OutputMethodMetadata {

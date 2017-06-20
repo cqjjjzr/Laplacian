@@ -3,6 +3,7 @@ package charlie.laplacian.decoder
 import charlie.laplacian.output.OutputSettings
 import charlie.laplacian.stream.TrackStream
 import java.util.*
+import kotlin.NoSuchElementException
 
 object DecoderRegistry {
     private val decoderFactories: MutableList<DecoderFactory> = LinkedList()
@@ -44,7 +45,7 @@ object DecoderRegistry {
             }
         }
         if (e == null)
-            throw DecoderException()
+            throw DecoderException(NoSuchElementException())
         else
             throw DecoderException(e)
     }

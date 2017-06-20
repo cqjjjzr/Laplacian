@@ -90,6 +90,7 @@ class OutputHelper(sourceInfo: TrackSourceInfo) {
 
     fun play() {
         paused = false
+        outputLine.open()
 
         pauseLock.lock()
         pauseCondition.signalAll()
@@ -98,11 +99,14 @@ class OutputHelper(sourceInfo: TrackSourceInfo) {
 
     fun pause() {
         paused = true
+        outputLine.pause()
     }
 
     fun close() {
         closed = true
         paused = true
+
+        outputDevice.closeLine(outputLine)
     }
 
     init {
@@ -110,14 +114,16 @@ class OutputHelper(sourceInfo: TrackSourceInfo) {
                 start = false,
                 isDaemon = true,
                 name = "Laplacian-PlayThread-$sourceInfo") {
-            while (decoder.hasNext()) {
-                outputLine.mix(decoder.read())
+            var buf = decoder.read()
+            while (buf != null) {
+                outputLine.mix(buf)
                 while (paused) {
                     pauseLock.lock()
                     pauseCondition.await()
                     pauseLock.unlock()
                 }
                 if (closed) return@thread
+                buf = decoder.read()
             }
         }
     }
