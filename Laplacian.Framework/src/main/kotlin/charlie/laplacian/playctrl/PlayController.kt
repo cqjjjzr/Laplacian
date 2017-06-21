@@ -111,10 +111,10 @@ class OutputHelper(sourceInfo: TrackSourceInfo) {
 
     init {
         thread = thread(
-                start = false,
                 isDaemon = true,
                 name = "Laplacian-PlayThread-$sourceInfo") {
-            var buf = decoder.read()
+            var buf: ByteArray? = null
+            buf = decoder.read(buf)
             while (buf != null) {
                 outputLine.mix(buf)
                 while (paused) {
@@ -123,8 +123,12 @@ class OutputHelper(sourceInfo: TrackSourceInfo) {
                     pauseLock.unlock()
                 }
                 if (closed) return@thread
-                buf = decoder.read()
+                buf = decoder.read(buf)
             }
         }
     }
+
+    fun seek(positionMillis: Long) = decoder.seek(positionMillis)
+    val positionMillis get() = decoder.positionMillis()
+    val durationMillis get() = decoder.durationMillis()
 }

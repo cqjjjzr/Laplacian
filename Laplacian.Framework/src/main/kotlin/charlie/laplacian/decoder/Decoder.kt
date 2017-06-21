@@ -1,7 +1,7 @@
 package charlie.laplacian.decoder
 
 interface Decoder {
-    fun read(): ByteArray?
+    fun read(buf: ByteArray?): ByteArray?
     fun seek(positionMillis: Long)
     fun positionMillis(): Long
     fun durationMillis(): Long

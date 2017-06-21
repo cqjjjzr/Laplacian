@@ -32,7 +32,6 @@ import org.ffmpeg.swresample2.Swresample2Library;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.Arrays;
 
 import static org.ffmpeg.avformat57.Avformat57Library.*;
 import static org.ffmpeg.avutil55.Avutil55Library.AVERROR_EOF;
@@ -219,7 +218,7 @@ public class FFmpegDecodeBridge {
 
     private AVPacket packet = new AVPacket();
     @Nullable
-    public byte[] tryRead() throws FFmpegException {
+    public byte[] tryRead(byte[] buf) throws FFmpegException {
         if (formatContext == null) throw new IllegalStateException("Decoder is already closed");
 
         int retval;
@@ -259,7 +258,11 @@ public class FFmpegDecodeBridge {
         Avutil55Library.INSTANCE.av_frame_free(new PointerByReference(frame.getPointer()));
 
         audioBuffer = tempPtr.getValue();
-        return Arrays.copyOf(audioBuffer.getByteArray(0, dataSize), dataSize);
+        if (buf != null && buf.length == dataSize) {
+            audioBuffer.read(0, buf, 0, dataSize);
+            return buf;
+        }
+        return audioBuffer.getByteArray(0, dataSize);
     }
 
     private void updatePosition(AVFrame frame) {
@@ -363,8 +366,8 @@ public class FFmpegDecodeBridge {
         OutputLine line = device.openLine();
         line.open();
         bridge.seek(5000);
-        byte[] buf;
-        while ((buf = bridge.tryRead()) != null)
+        byte[] buf = null;
+        while ((buf = bridge.tryRead(buf)) != null)
             line.mix(buf, 0, buf.length);
         device.closeLine(line);
         bridge.close();

@@ -64,7 +64,6 @@ class JavaSoundOutputDeviceInfo(private val mixer: Mixer): OutputDeviceInfo {
                             .filter { !it.isBigEndian }
                             .filter { it.encoding == AudioFormat.Encoding.PCM_SIGNED }
                             .filter { it.sampleSizeInBits != 24 }
-                            .filter { it.sampleRate > 0 }
                             .forEach {
                                 list += OutputSettings(it.sampleRate, it.sampleSizeInBits, it.channels)
                             }

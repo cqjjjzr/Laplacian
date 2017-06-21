@@ -13,6 +13,7 @@ import charlie.laplacian.source.essential.FileSource
 import charlie.laplacian.source.essential.FileTrackSourceInfo
 import org.junit.Test
 import java.io.File
+import java.lang.Thread.sleep
 import javax.sound.sampled.AudioSystem
 import javax.sound.sampled.DataLine
 import javax.sound.sampled.SourceDataLine
@@ -54,8 +55,14 @@ class FFmpegDecoderTest {
         OutputMethodRegistry.registerOutputMethod(JavaSoundOutputMethod())
         DecoderRegistry.registerDecoderFactory(FFmpegDecoderFactory())
         OutputHelper(FileTrackSourceInfo(
-                File("E:\\iTunes\\iTunes Media\\Music\\Yonder Voice\\雪幻ティルナノーグ\\01 雪幻ティルナノーグ.m4a"))).play()
-        while (true) ;
+                File("E:\\iTunes\\iTunes Media\\Music\\Yonder Voice\\雪幻ティルナノーグ\\01 雪幻ティルナノーグ.m4a"))).apply {
+            play()
+            sleep(10000)
+            println("$positionMillis / $durationMillis")
+            seek(0)
+            sleep(10000)
+            close()
+        }
     }
 
     @Test

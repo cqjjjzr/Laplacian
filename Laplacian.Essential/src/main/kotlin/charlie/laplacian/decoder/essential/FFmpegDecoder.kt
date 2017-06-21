@@ -34,11 +34,11 @@ class FFmpegDecoder(outputSettings: OutputSettings, stream: TrackStream): Decode
         lock.unlock()
     }
 
-    override fun read(): ByteArray? {
+    override fun read(buf: ByteArray?): ByteArray? {
         lock.lock()
-        val buf = bridge.tryRead()
+        val rbuf = bridge.tryRead(buf)
         lock.unlock()
-        return buf
+        return rbuf
     }
 
     override fun getMetadata(): DecoderMetadata = FFmpegDecoderMetadata
