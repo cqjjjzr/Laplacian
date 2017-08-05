@@ -55,22 +55,15 @@ class JavaSoundOutputDevice(outputSettings: OutputSettings): OutputDevice {
 class JavaSoundOutputDeviceInfo(private val mixer: Mixer): OutputDeviceInfo {
     override fun getName(): String = javaSoundRecoverMessyCode(mixer.mixerInfo.name)
 
-    override fun getAvailableSettings(): Array<OutputSettings> {
-        val list = ArrayList<OutputSettings>(mixer.sourceLineInfo.size)
-        mixer.sourceLineInfo.forEach {
-            AudioSystem.getLine(it).apply {
-                if (this is SourceDataLine)
-                    (this.lineInfo as DataLine.Info).formats
-                            .filter { !it.isBigEndian }
-                            .filter { it.encoding == AudioFormat.Encoding.PCM_SIGNED }
-                            .filter { it.sampleSizeInBits != 24 }
-                            .forEach {
-                                list += OutputSettings(it.sampleRate, it.sampleSizeInBits, it.channels)
-                            }
-            }
-        }
-        return list.toTypedArray()
-    }
+    override fun getAvailableSettings(): Array<OutputSettings> =
+            mixer.sourceLineInfo
+                    .map (AudioSystem::getLine)
+                    .filter { it is SourceDataLine }
+                    .flatMap { (it.lineInfo as DataLine.Info).formats.asIterable() }
+                    .filter { !it.isBigEndian && it.encoding == AudioFormat.Encoding.PCM_SIGNED && it.sampleSizeInBits != 24 }
+                    .map { OutputSettings(it.sampleRate, it.sampleSizeInBits, it.channels) }
+                    .toTypedArray()
+
 }
 
 private val HIGH_IDENTIFY = 0b11000000.toByte()

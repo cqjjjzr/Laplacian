@@ -18,7 +18,7 @@ class FileSource: LocalTrackSource {
                 if (!exists()) throw ExpiredLocalTrackStreamInfo(FileNotFoundException())
                 if (!isFile) throw ExpiredLocalTrackStreamInfo()
 
-                FileTrackStream(toPath())
+                charlie.laplacian.stream.essential.FileTrackStream(toPath())
             }
         } else {
             throw InvalidTrackSourceInfoException()

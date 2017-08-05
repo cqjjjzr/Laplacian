@@ -1,7 +1,7 @@
 package charlie.laplacian.launcher
 
 import charlie.laplacian.config.Configuration
-import charlie.laplacian.gui.GUIRegistery
+import charlie.laplacian.frontend.FrontendRegistry
 import charlie.laplacian.plugin.PluginInitializer
 
 fun main(args: Array<String>) {
@@ -15,5 +15,5 @@ private fun initAll() {
 }
 
 private fun startupGUI() {
-    GUIRegistery.startupGUI(Configuration.getGUISupport())
+    FrontendRegistry.startupGUI(Configuration.getFrontend())
 }

@@ -1,7 +1,7 @@
 package charlie.laplacian.playctrl
 
 import charlie.laplacian.config.Configuration
-import charlie.laplacian.decoder.Decoder
+import charlie.laplacian.decoder.DecoderSession
 import charlie.laplacian.source.SourceRegistry
 import charlie.laplacian.source.TrackSourceInfo
 import charlie.laplacian.track.Track
@@ -17,7 +17,7 @@ object PlayController {
     private val tracks: LinkedList<Track> = LinkedList()
     private var currentTrackIndex = 0
     private lateinit var currentTrack: Track
-    private lateinit var decoder: Decoder
+    private lateinit var decoderSession: DecoderSession
 
     fun addTemp(track: Track) {
         temp.addFirst(track)
@@ -57,12 +57,12 @@ object PlayController {
     }
 
     fun start() {
-        decoder = Configuration.getDecoder(SourceRegistry.getStream(tracks[currentTrackIndex].sourceInfo))
+        decoderSession = Configuration.getDecoder(SourceRegistry.getStream(tracks[currentTrackIndex].sourceInfo))
         //decoder.play()
     }
 
     fun stop() {
-        decoder.close()
+        decoderSession.close()
         currentTrackIndex = -1
     }
 }
@@ -131,4 +131,5 @@ class OutputHelper(sourceInfo: TrackSourceInfo) {
     fun seek(positionMillis: Long) = decoder.seek(positionMillis)
     val positionMillis get() = decoder.positionMillis()
     val durationMillis get() = decoder.durationMillis()
+    val volumeController = outputLine.getVolumeController()
 }

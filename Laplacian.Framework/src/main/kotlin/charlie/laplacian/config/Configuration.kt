@@ -1,9 +1,9 @@
 package charlie.laplacian.config
 
-import charlie.laplacian.decoder.Decoder
 import charlie.laplacian.decoder.DecoderRegistry
-import charlie.laplacian.gui.GUIRegistery
-import charlie.laplacian.gui.GUISupport
+import charlie.laplacian.decoder.DecoderSession
+import charlie.laplacian.frontend.Frontend
+import charlie.laplacian.frontend.FrontendRegistry
 import charlie.laplacian.output.OutputMethodRegistry
 import charlie.laplacian.output.OutputSettings
 import charlie.laplacian.stream.TrackStream
@@ -21,7 +21,7 @@ object Configuration {
 
     private lateinit var conf: XMLConfiguration
 
-    fun getDecoder(stream: TrackStream): Decoder = DecoderRegistry.tryDecode(getOutputSettings(), stream)
+    fun getDecoder(stream: TrackStream): DecoderSession = DecoderRegistry.tryDecode(getOutputSettings(), stream)
 
     fun getOutputSettings() = OutputSettings(
             conf.getFloat("output.sampleRateHz", ConfigurationDefaultValues.mixerSampleRateHz),
@@ -34,7 +34,7 @@ object Configuration {
             .getOutputMethod(conf.getString("output.mixer", ConfigurationDefaultValues.outputMethodClassName))
             .openDevice(outputSettings)
 
-    fun getGUISupport(): GUISupport = GUIRegistery.findGUI(conf.getString("gui.guiSupport", ConfigurationDefaultValues.guiSupportClassName))
+    fun getFrontend(): Frontend = FrontendRegistry.findFrontend(conf.getString("frontend.guiSupport", ConfigurationDefaultValues.frontendClassName))
 
     fun init() {
         Paths.get(FILE_NAME).apply {
@@ -50,7 +50,7 @@ object ConfigurationDefaultValues {
     var mixerSampleRateHz: Float = 44100f
     var bitDepth: Int = 16
     var numChannels: Int = 2
-    val guiSupportClassName = "charlie.laplacian.gui.essential.MaterialGUI"
+    val frontendClassName = "charlie.laplacian.frontend.essential.MaterialGUI"
 
     fun refresh() {
         AudioSystem.getMixerInfo().forEach {

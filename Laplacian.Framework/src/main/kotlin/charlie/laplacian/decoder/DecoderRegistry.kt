@@ -6,40 +6,40 @@ import java.util.*
 import kotlin.NoSuchElementException
 
 object DecoderRegistry {
-    private val decoderFactories: MutableList<DecoderFactory> = LinkedList()
+    private val decoders: MutableList<Decoder> = LinkedList()
 
-    fun registerDecoderFactory(factory: DecoderFactory) {
-        if (!decoderFactories.contains(factory))
-            decoderFactories += factory
+    fun registerDecoderFactory(factory: Decoder) {
+        if (!decoders.contains(factory))
+            decoders += factory
     }
 
-    fun unregisterDecoderFactory(factory: DecoderFactory) {
-        decoderFactories -= factory
+    fun unregisterDecoderFactory(factory: Decoder) {
+        decoders -= factory
     }
 
-    fun getMetadatas(): Array<DecoderMetadata> = Array(decoderFactories.size, { decoderFactories[it].getMetadata() })
+    fun getMetadatas(): Array<DecoderMetadata> = Array(decoders.size, { decoders[it].getMetadata() })
 
     fun moveUp(index: Int) {
-        if (index == 0 || decoderFactories.size <= 1) throw IllegalArgumentException()
-        decoderFactories[index - 1].apply {
-            decoderFactories[index - 1] = decoderFactories[index]
-            decoderFactories[index] = this
+        if (index == 0 || decoders.size <= 1) throw IllegalArgumentException()
+        decoders[index - 1].apply {
+            decoders[index - 1] = decoders[index]
+            decoders[index] = this
         }
     }
 
     fun moveDown(index: Int) {
-        if (index == decoderFactories.size - 1 || decoderFactories.size <= 1) throw IllegalArgumentException()
-        decoderFactories[index].apply {
-            decoderFactories[index] = decoderFactories[index + 1]
-            decoderFactories[index + 1] = this
+        if (index == decoders.size - 1 || decoders.size <= 1) throw IllegalArgumentException()
+        decoders[index].apply {
+            decoders[index] = decoders[index + 1]
+            decoders[index + 1] = this
         }
     }
 
-    fun tryDecode(outputSettings: OutputSettings, stream: TrackStream): Decoder {
+    fun tryDecode(outputSettings: OutputSettings, stream: TrackStream): DecoderSession {
         var e: Throwable? = null
-        decoderFactories.forEach {
+        decoders.forEach {
             try {
-                return it.getDecoder(outputSettings, stream)
+                return it.getSession(outputSettings, stream)
             } catch (ex: Exception) {
                 e = ex
             }

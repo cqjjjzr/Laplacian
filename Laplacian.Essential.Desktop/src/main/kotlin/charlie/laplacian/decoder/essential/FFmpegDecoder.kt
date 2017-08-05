@@ -1,14 +1,14 @@
 package charlie.laplacian.decoder.essential
 
 import charlie.laplacian.decoder.Decoder
-import charlie.laplacian.decoder.DecoderFactory
 import charlie.laplacian.decoder.DecoderMetadata
+import charlie.laplacian.decoder.DecoderSession
 import charlie.laplacian.decoder.essential.ffmpeg.internal.FFmpegDecodeBridge
 import charlie.laplacian.output.OutputSettings
 import charlie.laplacian.stream.TrackStream
 import java.util.concurrent.locks.ReentrantLock
 
-class FFmpegDecoder(outputSettings: OutputSettings, stream: TrackStream): Decoder {
+class FFmpegDecoderSession(outputSettings: OutputSettings, stream: TrackStream): DecoderSession {
     companion object {
         fun init() {
             FFmpegDecodeBridge.init()
@@ -40,19 +40,17 @@ class FFmpegDecoder(outputSettings: OutputSettings, stream: TrackStream): Decode
         lock.unlock()
         return rbuf
     }
-
-    override fun getMetadata(): DecoderMetadata = FFmpegDecoderMetadata
 }
 
-class FFmpegDecoderFactory: DecoderFactory {
-    override fun getDecoder(outputSettings: OutputSettings, stream: TrackStream): Decoder {
-        return FFmpegDecoder(outputSettings, stream)
+class FFmpegDecoder : Decoder {
+    override fun getSession(outputSettings: OutputSettings, stream: TrackStream): DecoderSession {
+        return FFmpegDecoderSession(outputSettings, stream)
     }
 
     override fun getMetadata(): DecoderMetadata = FFmpegDecoderMetadata
 
     override fun hashCode(): Int = this.javaClass.name.hashCode()
-    override fun equals(other: Any?): Boolean = other is FFmpegDecoderFactory
+    override fun equals(other: Any?): Boolean = other is FFmpegDecoder
 }
 
 object FFmpegDecoderMetadata: DecoderMetadata {
