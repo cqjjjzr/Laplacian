@@ -1,23 +1,7 @@
 package charlie.laplacian.track.property.essential
 
-import charlie.laplacian.I18n
-import charlie.laplacian.track.property.Property
-import charlie.laplacian.track.property.PropertyApplicableType
 import charlie.laplacian.track.property.PropertyApplicableTypeSets.Companion.TRACK_ONLY
-import charlie.laplacian.track.property.PropertyType
 import java.util.*
 
-class EqualsProperty(private var value: UUID): Property() {
-    override fun getName(): String = I18n.getString("property.essential.equalsProperty.name")
-
-    override fun getValue(): Any = value
-
-    override fun setValue(value: Any) {
-        if (value !is UUID) throw ClassCastException()
-        this.value = value
-    }
-
-    override fun getType(): PropertyType = PropertyType.REFERENCE
-
-    override fun getApplicableFor(): Set<PropertyApplicableType> = TRACK_ONLY
-}
+class EqualsProperty(value: Array<UUID>)
+    : I18nProperty<Array<UUID>>(value, "property.essential.equalsProperty.name", TRACK_ONLY, false)

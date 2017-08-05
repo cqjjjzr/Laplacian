@@ -10,5 +10,5 @@ interface TrackGroupingMethod {
     fun removeTrack(track: Track)
     fun canDuplicate(): Boolean
     fun count(): Int
-    fun getProperties(): List<Property>
+    fun getProperties(): List<Property<*>>
 }

@@ -9,8 +9,8 @@ import java.util.*
 import kotlin.reflect.KClass
 
 class Track(val uuid: UUID, val sourceInfo: TrackSourceInfo,
-            properties: List<Property>, extensionParams: List<ExtensionParam>) : Serializable {
-    private val properties: MutableSet<Property> = HashSet()
+            properties: List<Property<*>>, extensionParams: List<ExtensionParam>) : Serializable {
+    private val properties: MutableSet<Property<*>> = HashSet()
     private val extensionParams: MutableList<ExtensionParam> = LinkedList()
 
     init {
@@ -18,8 +18,8 @@ class Track(val uuid: UUID, val sourceInfo: TrackSourceInfo,
         this.extensionParams.addAll(extensionParams)
     }
 
-    fun getProperties(): Set<Property> = Collections.unmodifiableSet(properties)
-    fun addProperty(property: Property) {
+    fun getProperties(): Set<Property<*>> = Collections.unmodifiableSet(properties)
+    fun addProperty(property: Property<*>) {
         if (!property.getApplicableFor().contains(PropertyApplicableType.TRACK))
             throw IllegalArgumentException("not applicable to track!")
         if (properties.find { it.javaClass.isAssignableFrom(property.javaClass) } != null)
@@ -27,17 +27,17 @@ class Track(val uuid: UUID, val sourceInfo: TrackSourceInfo,
         properties += property
     }
 
-    fun removeProperty(property: Property) {
+    fun removeProperty(property: Property<*>) {
         properties -= property
     }
 
     override fun equals(other: Any?): Boolean = if (other != null && other is Track) other.uuid == uuid else false
     override fun hashCode(): Int = uuid.hashCode()
 
-    operator fun plus(property: Property) = addProperty(property)
-    operator fun minus(property: Property) = removeProperty(property)
+    operator fun plus(property: Property<*>) = addProperty(property)
+    operator fun minus(property: Property<*>) = removeProperty(property)
     operator fun get(propertyClassName: String) = properties
             .filter { it::class.qualifiedName == propertyClassName }
-    operator fun get(propertyClass: KClass<out Property>) = properties
+    operator fun get(propertyClass: KClass<out Property<*>>) = properties
             .filter { propertyClass.isInstance(it) }
 }
