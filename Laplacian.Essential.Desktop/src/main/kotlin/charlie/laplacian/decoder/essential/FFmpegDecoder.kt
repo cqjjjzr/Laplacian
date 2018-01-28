@@ -9,12 +9,6 @@ import charlie.laplacian.stream.TrackStream
 import java.util.concurrent.locks.ReentrantLock
 
 class FFmpegDecoderSession(outputSettings: OutputSettings, stream: TrackStream): DecoderSession {
-    companion object {
-        fun init() {
-            FFmpegDecodeBridge.init()
-        }
-    }
-
     private val bridge = FFmpegDecodeBridge(stream, outputSettings)
     private val lock = ReentrantLock()
 
@@ -43,6 +37,12 @@ class FFmpegDecoderSession(outputSettings: OutputSettings, stream: TrackStream):
 }
 
 class FFmpegDecoder : Decoder {
+    companion object {
+        fun init() {
+            FFmpegDecodeBridge.init()
+        }
+    }
+
     override fun getSession(outputSettings: OutputSettings, stream: TrackStream): DecoderSession {
         return FFmpegDecoderSession(outputSettings, stream)
     }

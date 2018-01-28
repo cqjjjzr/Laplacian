@@ -107,24 +107,30 @@ class OutputHelper(sourceInfo: TrackSourceInfo) {
         paused = true
 
         outputDevice.closeLine(outputLine)
+        decoder.close()
     }
 
     init {
         thread = thread(
                 isDaemon = true,
                 name = "Laplacian-PlayThread-$sourceInfo") {
+            waitForPlay()
             var buf: ByteArray? = null
             buf = decoder.read(buf)
             while (buf != null) {
                 outputLine.mix(buf)
-                while (paused) {
-                    pauseLock.lock()
-                    pauseCondition.await()
-                    pauseLock.unlock()
-                }
+                waitForPlay()
                 if (closed) return@thread
                 buf = decoder.read(buf)
             }
+        }
+    }
+
+    private fun waitForPlay() {
+        while (paused) {
+            pauseLock.lock()
+            pauseCondition.await()
+            pauseLock.unlock()
         }
     }
 

@@ -50,7 +50,7 @@ object ConfigurationDefaultValues {
     var mixerSampleRateHz: Float = 44100f
     var bitDepth: Int = 16
     var numChannels: Int = 2
-    val frontendClassName = "charlie.laplacian.frontend.essential.MaterialGUI"
+    val frontendClassName = "charlie.laplacian.frontend.essential.MaterialGUI" // Oops @ice1000
 
     fun refresh() {
         AudioSystem.getMixerInfo().forEach {

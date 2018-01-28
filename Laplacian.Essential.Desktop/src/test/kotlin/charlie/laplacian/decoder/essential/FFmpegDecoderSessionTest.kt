@@ -20,7 +20,7 @@ import javax.sound.sampled.SourceDataLine
 class FFmpegDecoderSessionTest {
     @Test
     fun test() {
-        FFmpegDecoderSession.init()
+        FFmpegDecoder.init()
         Configuration.init()
         ConfigurationDefaultValues.refresh()
         SourceRegistry.registerSource(FileSource())

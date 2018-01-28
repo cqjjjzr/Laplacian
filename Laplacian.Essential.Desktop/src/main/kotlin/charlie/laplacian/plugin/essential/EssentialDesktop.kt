@@ -16,18 +16,19 @@ class EssentialDesktop(wrapper: PluginWrapper?) : Plugin(wrapper) {
         val AUTHOR = "Charlie Jiang"
     }
 
-    private val decoderFactory = FFmpegDecoder()
+    private val decoder = FFmpegDecoder()
     private val outputMethod = JavaSoundOutputMethod()
     private val fileSource = FileSource()
 
     override fun start() {
-        DecoderRegistry.registerDecoderFactory(decoderFactory)
+        DecoderRegistry.registerDecoderFactory(decoder)
+        FFmpegDecoder.init()
         OutputMethodRegistry.registerOutputMethod(outputMethod)
         SourceRegistry.registerSource(fileSource)
     }
 
     override fun stop() {
-        DecoderRegistry.unregisterDecoderFactory(decoderFactory)
+        DecoderRegistry.unregisterDecoderFactory(decoder)
         OutputMethodRegistry.unregisterOutputMethod(outputMethod)
         SourceRegistry.unregisterSource(fileSource)
     }
